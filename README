@@ -1,0 +1,81 @@
+1. Configuration
+
+   Create a file bin/credentials.sh and configure it according to your
+   account details:
+
+     export AWS_ENDPOINT=us-west-1.ec2.amazonaws.com
+     export EC2_URL=http://$AWS_ENDPOINT/
+     export AWS_ACCOUNT_ID=8015-...
+     export AWS_ACCESS_KEY_ID=AKIA...
+     export AWS_SECRET_ACCESS_KEY=UmU3...
+     export EC2_PRIVATE_KEY=/home/apurtell/.ec2/pk-tm-master.pem
+     export EC2_CERT=/home/apurtell/.ec2/cert-tm-master.pem
+     export EC2_ROOT_SSH_KEY=/home/apurtell/.ec2/root-us-west-1-tm-master.pem
+
+   Configure bin/env.sh
+
+     Set REGION to the region you would like to use.
+   
+     Set S3_BUCKET to the bucket where you would like to store the AMI image
+     files.
+
+     Set S3_ACCOUNT to the account that owns S3_BUCKET. Be sure to only use
+     digits (elide the '-').
+
+2. Create an AMI (optional)
+
+   ./bin/create-image [options]
+
+   where [options] can be one or more of:
+
+     -a <arch>    architecture, default x86_64
+     -t <type>    instance type, default m1.small
+
+   This will launch an instance that will build an AMI. 
+
+   When the process of image building is complete the remote instance will
+   still be running. The last step of the build procedure will print out
+   the command you should execute to terminate the build instace.
+
+3. Launch master
+
+   ./bin/launch-master [options]
+
+   where [options] can be one or more of:
+
+     -a <arch>    architecture, default x86_64
+     -t <type>    instance type, default m1.xlarge
+     -m           enable monitoring, default no
+     --ami <id>   AMI ID
+
+   This command will print out the public DNS name of the master instance if
+   successfully launched.
+
+4. Launch slaves
+
+   ./bin/launch-slaves [options] <master> <num slaves>
+
+   where [options] can be one or more of:
+
+     -a <arch>    architecture, default x86_64
+     -t <type>    instance type, default m1.xlarge
+     -m           enable monitoring, default no
+     --ami <id>   AMI ID
+
+   where <master> is the public DNS name of the master instance
+
+   where <num slaves> is the number of slaves to launch
+
+   More slaves can be launched at any time by executing bin/launch-slaves
+   again.
+
+5. SSH to the cluster
+
+   Typically you will want to log in to the master:
+
+   ./bin/ssh-cluster <master>
+
+   where <master> is the public DNS name of the master instance
+
+   Note you can use any public DNS name of any instance in the cluster to log
+   in to any of them.

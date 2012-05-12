@@ -1,0 +1,193 @@
+#!/bin/bash
+
+export bin="/media/ephemeral0"
+unset DISPLAY
+mv /tmp/*.sh /tmp/*.pem /tmp/create-image-remote /media/ephemeral0
+if [ -f "$bin"/credentials.sh ] ; then
+  source "$bin"/credentials.sh
+fi
+source "$bin"/env.sh
+
+ARCH=`uname -m | sed -e s/i.86/i386/`
+
+echo "Remote: ARCH is $ARCH"
+echo "Remote: JAVA_RPM is $JAVA_RPM"
+echo "Remote: HADOOP_VERSION is $HADOOP_VERSION"
+echo "Remote: HADOOP_URL is $HADOOP_URL"
+echo "Remote: HBASE_VERSION is $HBASE_VERSION"
+echo "Remote: HBASE_URL is $HBASE_URL"
+
+####################
+# Install Java
+
+echo "Installing Java"
+cd /media/ephemeral0
+wget -O java.rpm $JAVA_RPM
+rpm -Uvh java.rpm
+rm -f *.rpm
+cat > /etc/profile.d/java.sh <<EOF
+export JAVA_HOME=/usr/java/latest
+export PATH=\$JAVA_HOME/bin:\$PATH
+EOF
+chmod 755 /etc/profile.d/java.sh
+
+export JAVA_HOME=/usr/java/latest
+export PATH=$JAVA_HOME/bin:$PATH
+
+echo "Enabling EPEL repository"
+
+sed -i -e s/enabled=0/enabled=1/ /etc/yum.repos.d/epel.repo
+
+####################
+# Install global deps
+
+echo "Installing RPMs"
+yum -y install screen ganglia-gmetad ganglia-gmond ganglia-web httpd php lzo xfsprogs krb5-server krb5-workstation
+
+####################
+# Set up user accounts
+
+echo "Configuring user accounts"
+groupadd hadoop
+useradd hadoop -g hadoop
+useradd hdfs
+useradd mapred
+useradd hbase
+# hdfs and hbase user must share primary group hadoop for HDFS shortcutting
+usermod -a -g hadoop -G hdfs hdfs
+usermod -a -g hadoop -G hdfs hbase
+usermod -a -G hadoop mapred
+# root user needs to be in hadoop group for correct ulimits on datanodes
+usermod -a -G hadoop root
+# make sure test users can log in
+usermod -s /bin/bash -U hadoop
+usermod -s /bin/bash -U hbase
+usermod -s /bin/bash -U hdfs
+usermod -s /bin/bash -U mapred
+
+####################
+# Install Hadoop
+
+echo "Installing Hadoop $HADOOP_VERSION."
+cd /usr/lib
+wget -O hadoop.tgz $HADOOP_URL
+tar xzf hadoop.tgz
+rm -f hadoop.tgz
+ln -s hadoop-$HADOOP_VERSION hadoop
+mkdir /var/log/hadoop /var/run/hadoop
+chown hdfs:hadoop /var/log/hadoop /var/run/hadoop
+chmod 775 /var/log/hadoop /var/run/hadoop
+ln -s /var/log/hadoop /usr/lib/hadoop/logs
+mkdir -p /etc/hadoop/conf
+rm -rf /usr/lib/hadoop/conf
+ln -s /etc/hadoop/conf /usr/lib/hadoop/conf
+ln -s /usr/lib/hadoop/hadoop-core-$HADOOP_VERSION.jar /usr/lib/hadoop/hadoop-core.jar
+ln -s /usr/lib/hadoop/hadoop-test-$HADOOP_VERSION.jar /usr/lib/hadoop/hadoop-test.jar
+# fix task controller ownership and permissions
+find /usr/lib/hadoop/ -name task-controller -exec chown root:mapred \{} \;
+find /usr/lib/hadoop/ -name task-controller -exec chmod 4750 \{} \;
+cat > /etc/profile.d/hadoop.sh <<EOF
+export PATH=\$PATH:/usr/lib/hadoop/bin
+EOF
+chmod 755 /etc/profile.d/hadoop.sh
+
+####################
+# Install HBase
+
+echo "Installing HBase $HBASE_VERSION."
+cd /usr/lib
+wget -O hbase.tgz $HBASE_URL
+tar xzf hbase.tgz
+rm -f hbase.tgz
+ln -s hbase-$HBASE_VERSION-security hbase
+mkdir /var/log/hbase /var/run/hbase
+chown hbase:hadoop /var/log/hbase /var/run/hbase
+chmod 775 /var/log/hbase /var/run/hbase
+ln -s /var/log/hbase /usr/lib/hbase/logs
+mkdir -p /etc/hbase/conf
+rm -rf /usr/lib/hbase/conf
+ln -s /etc/hbase/conf /usr/lib/hbase/conf
+# version independent symlinks
+ln -s /usr/lib/hbase/hbase-$HBASE_VERSION-security.jar /usr/lib/hbase/hbase.jar
+ln -s /usr/lib/hbase/lib/zookeeper-*.jar /usr/lib/hbase/zookeeper.jar
+# replace bundled Hadoop jar with a version independent symlink
+rm -f /usr/lib/hbase/lib/hadoop-core-*.jar
+ln -s /usr/lib/hadoop/hadoop-core.jar /usr/lib/hbase/lib
+# replace lib/native with a symlink to Hadoop native libs
+rm -rf /usr/lib/hbase/lib/native
+ln -s /usr/lib/hadoop/lib/native  /usr/lib/hbase/lib
+cat > /etc/profile.d/hbase.sh <<EOF
+export PATH=\$PATH:/usr/lib/hbase/bin
+EOF
+chmod 755 /etc/profile.d/hbase.sh
+
+# add explicitly to root path
+cat >> /root/.bashrc <<EOF
+export PATH=\$PATH:/usr/lib/hadoop/bin:/usr/lib/hbase/bin
+EOF
+
+####################
+# Configure system
+
+echo "Configuring system"
+
+echo "@hadoop soft nofile 65536" >> /etc/security/limits.conf
+echo "@hadoop hard nofile 65536" >> /etc/security/limits.conf
+echo "@hadoop soft nproc 65536" >> /etc/security/limits.conf
+echo "@hadoop hard nproc 65536" >> /etc/security/limits.conf
+echo "fs.file-max = 65536" >> /etc/sysctl.conf
+echo "vm.swappiness = 0" >> /etc/sysctl.conf
+
+[ ! -f /etc/hosts ] &&  echo "127.0.0.1 localhost" > /etc/hosts
+
+# helper wrapper for init
+cat > /usr/bin/klogin <<EOF
+#!/bin/bash
+user=\$1
+host=\`hostname -f\`
+if [ -z "\$user" ] ; then
+  user=\`whoami\`
+fi
+case \$user in
+  hdfs|mapred|hadoop)
+    kinit -k -t /etc/hadoop/conf/\$user.keytab \$user/\$host && kinit -R
+    ;;
+  hbase)
+    kinit -k -t /etc/hbase/conf/\$user.keytab \$user/\$host && kinit -R
+    ;;
+  *)
+    echo "No keytab for user \$user"
+    ;;
+esac
+EOF
+chmod 755 /usr/bin/klogin
+
+yum -y clean all
+
+for i in httpd gmetad gmond kadmin krb5kdc yum-updatesd ; do
+  chkconfig --levels 0123456 $i off
+done
+
+rm -f /etc/zookeeper/zoo.cfg
+
+mv /root/.ssh/authorized_keys /media/ephemeral0/
+
+cd ~root
+
+####################
+# Bundle volume
+
+echo "Bundling volume"
+ec2-bundle-vol -d /media/ephemeral0 -k /media/ephemeral0/key.pem -c /media/ephemeral0/cert.pem -u $AWS_ACCOUNT_ID -s 3072 -p $IMAGE_VERSION-$ARCH -r $ARCH
+
+# now we can move the key back
+mv /media/ephemeral0/authorized_keys /root/.ssh/
+
+####################
+# Upload bundle
+
+echo "Uploading new bundle $IMAGE_VERSION-$ARCH"
+[ -n "$REGION" -a "$REGION" != "us-east-1" ] && LOC="--location $REGION"
+ec2-upload-bundle --access-key $AWS_ACCESS_KEY_ID --secret-key $AWS_SECRET_ACCESS_KEY  --bucket $S3_BUCKET --manifest /media/ephemeral0/$IMAGE_VERSION-$ARCH.manifest.xml $LOC
+
+echo "Done"

@@ -1,0 +1,88 @@
+#!/usr/bin/env bash
+
+arch=x86_64
+type=m1.xlarge
+nrhosts=1
+monitoring=
+secgroup=default
+price=0.5
+zone=
+ami=
+on_demand=
+
+while [ $# -gt 0 ] ; do
+  case "$1" in
+    -a | --arch)       arch="$2"; shift;;
+    -t | --type)       type="$2"; shift;;
+    -h | --hosts)      nrhosts="$2"; shift;;
+    -m | --monitoring) monitoring=1;;
+    -p | --price)      price="$2"; shift;;
+    -s | --secgroup)   secgroup="$2"; shift;;
+    -z | --zone)       zone="$2"; shift;;
+    -o | --on-demand)  on_demand=y ;;
+    --ami)             ami="$2"; shift;;
+    --)                shift; break;;
+    -*)                shift;;
+    *)                 break;;
+  esac
+  shift
+done
+
+if [ $# -gt 0 ] ; then
+  MASTER_HOST=$1
+  shift
+else
+  echo "usage: launch-aux <master> <count>" && exit 1
+fi
+
+if [ $# -gt 0 ] ; then
+  nrhosts=$1
+  shift
+else
+  echo "usage: launch-aux <master> <count>" && exit 1
+fi
+
+bin=`dirname "$0"`
+bin=`cd "$bin"; pwd`
+export bin
+if [ -f "$bin"/credentials.sh ] ; then
+  source "$bin"/credentials.sh
+fi
+source "$bin"/env.sh
+
+echo "ARCH: $arch"
+echo "TYPE: $type"
+echo "IMAGE_VERSION: $IMAGE_VERSION"
+echo "MASTER_HOST: $MASTER_HOST"
+
+if [ -z $ami ] ; then
+  AMI_IMAGE=`ec2-describe-images $TOOL_OPTS -a | grep $S3_ACCOUNT | grep $IMAGE_VERSION-$arch | grep available | awk '{print $2}'`
+else
+  AMI_IMAGE=$ami
+fi
+
+echo "AMI_IMAGE: $AMI_IMAGE"
+
+[ -z $AMI_IMAGE ] && echo "No AMI found" && exit 1
+
+cat "$bin"/image/tarball/setup-slave-remote.pre > /tmp/userdata$$
+echo "MASTER_HOST=$MASTER_HOST" >> /tmp/userdata$$
+cat "$bin"/image/tarball/setup-remote >> /tmp/userdata$$
+cat "$bin"/image/tarball/setup-aux-remote.post >> /tmp/userdata$$
+gzip -9 /tmp/userdata$$
+
+if [ ! -z "$on_demand" ] ; then
+  CMD="ec2-run-instances $AMI_IMAGE $TOOL_OPTS -n $nrhosts -k root -t $type -g $secgroup -f /tmp/userdata$$.gz"
+else
+  CMD="ec2-request-spot-instances $AMI_IMAGE $TOOL_OPTS -n $nrhosts -k root -t $type -g $secgroup -p $price -f /tmp/userdata$$.gz"
+fi
+if [ ! -z "$monitoring" ] ; then
+  CMD="$CMD -m"
+fi
+if [ ! -z "$zone" ] ; then
+  CMD="$CMD -z $zone"
+fi
+OUTPUT=`$CMD`
+echo $OUTPUT
+
+rm -f /tmp/userdata$$.gz

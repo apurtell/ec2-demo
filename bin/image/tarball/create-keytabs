@@ -1,0 +1,43 @@
+#!/bin/sh
+
+OUTPUT_DIR=/etc/puppet/files
+
+create_keytab() {
+    kt=$1; shift;
+    host=$1; shift;
+    users=$@
+
+    cmd=""
+    for u in $users; do
+        principal=$u/$host
+        existing=$(kadmin.local -q "listprincs ${principal}" | grep -v "Authenticating as" | grep "${principal}@")
+        if [ -z "$existing" ]; then
+           kadmin.local -q "add_principal -randkey ${principal}" > /dev/null 2>&1
+        fi
+        listed=$(test -e ${kt} && klist -k ${kt} | grep "${principal}@")
+        if [ -z "$listed" ]; then
+            kadmin.local -q "ktadd -k $kt -norandkey ${principal}" > /dev/null 2>&1
+        fi
+    done
+
+}
+
+if [ $# -lt 1 ]; then
+    echo "Usage: $0 hostname1 hostname2 ..."
+    exit 1
+fi
+
+for hostname in $@; do
+    echo "Generating keytabs for host ${hostname}..."
+    basedir=$OUTPUT_DIR/$hostname
+    mkdir -p $basedir
+
+    create_keytab $basedir/krb5.keytab $hostname host
+    create_keytab $basedir/hdfs.keytab $hostname hdfs host
+    create_keytab $basedir/mapred.keytab $hostname mapred host
+    create_keytab $basedir/hbase.keytab $hostname hbase zookeeper host
+    # create_keytab $basedir/zookeeper.keytab $hostname hbase host
+done
+
+# Make sure all generated files are owned by puppet
+chown -R puppet $OUTPUT_DIR

@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+
+arch=x86_64
+type=m1.xlarge
+secgroup=default
+monitoring=
+zone=
+ami=
+
+while [ $# -gt 0 ] ; do
+  case "$1" in
+    -a | --arch)       arch="$2"; shift;;
+    -t | --type)       type="$2"; shift;;
+    -m | --monitoring) monitoring=yes;;
+    -s | --secgroup)   secgroup="$2"; shift;;
+    -z | --zone)       zone="$2"; shift;;
+    --ami)             ami="$2"; shift;;
+    --)                shift; break;;
+    -*)                shift;;
+    *)                 break;;
+  esac
+  shift
+done
+
+bin=`dirname "$0"`
+bin=`cd "$bin"; pwd`
+export bin
+if [ -f "$bin"/credentials.sh ] ; then
+  source "$bin"/credentials.sh
+fi
+source "$bin"/env.sh
+
+echo "ARCH: $arch"
+echo "TYPE: $type"
+echo "IMAGE_VERSION: $IMAGE_VERSION"
+
+if [ -z $ami ] ; then
+  AMI_IMAGE=`ec2-describe-images $TOOL_OPTS -a | grep $S3_ACCOUNT | grep $IMAGE_VERSION-$arch | grep available | awk '{print $2}'`
+else
+  AMI_IMAGE=$ami
+fi
+
+echo "AMI_IMAGE: $AMI_IMAGE"
+
+[ -z $AMI_IMAGE ] && echo "No AMI found" && exit 1
+
+cat "$bin"/image/tarball/setup-master-remote.pre > /tmp/userdata$$
+cat "$bin"/image/tarball/setup-remote >> /tmp/userdata$$
+cat "$bin"/image/tarball/setup-master-remote.post >> /tmp/userdata$$
+gzip -9 /tmp/userdata$$
+
+CMD="ec2-run-instances $AMI_IMAGE $TOOL_OPTS -k root -t $type -g $secgroup -f /tmp/userdata$$.gz"
+if [ ! -z "$monitoring" ] ; then
+  CMD="$CMD -m"
+fi
+if [ ! -z "$zone" ] ; then
+  CMD="$CMD -z $zone"
+fi
+OUTPUT=`$CMD`
+INSTANCE=`echo $OUTPUT | awk '{print $6}'`
+echo $OUTPUT
+
+rm -f /tmp/userdata$$.gz
+
+echo -n "Polling server status "
+while true; do
+  printf "."
+  HOSTNAME=`ec2-describe-instances $TOOL_OPTS $INSTANCE | grep running | awk '{print $4}'`
+  if [ ! -z $HOSTNAME ] ; then
+    break;
+  fi
+  sleep 1
+done
+echo
+
+echo -n "Uploading private key "
+while true ; do
+  printf "."
+  scp $SSH_OPTS $EC2_ROOT_SSH_KEY ec2-user@$HOSTNAME:~/.ssh/identity > /dev/null 2>&1
+  [ $? -eq 0 ] && break
+  sleep 1
+done
+echo
+
+# store master to tmp file for easy access later
+echo -n $HOSTNAME > /tmp/ec2-master
+
+echo "HOSTNAME: $HOSTNAME"
+echo $HOSTNAME > /tmp/ec2-master

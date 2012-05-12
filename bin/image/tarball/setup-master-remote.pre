@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+export IS_MASTER=true
+MASTER_HOST=${MASTER_HOST:-`hostname --fqdn | awk '{print tolower($1)}'`}
