@@ -14,7 +14,7 @@ S3_ACCOUNT=801535628028
 
 # The version of HBase to use and the distribution tarball location
 
-export HBASE_VERSION=0.92.1
+export HBASE_VERSION=0.94.0
 export HBASE_URL=http://www.apache.org/dist/hbase/hbase-$HBASE_VERSION/hbase-$HBASE_VERSION-security.tar.gz
 
 # The version of Hadoop to use and the distribution tarball location
