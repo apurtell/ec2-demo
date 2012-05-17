@@ -54,8 +54,8 @@ useradd hdfs
 useradd mapred
 useradd hbase
 # hdfs and hbase user must share primary group hadoop for HDFS shortcutting
-usermod -a -g hadoop -G hdfs hdfs
-usermod -a -g hadoop -G hdfs hbase
+usermod -a -G hadoop hdfs
+usermod -a -G hadoop hbase
 usermod -a -G hadoop mapred
 # root user needs to be in hadoop group for correct ulimits on datanodes
 usermod -a -G hadoop root
