@@ -1,12 +1,10 @@
 #!/bin/bash
 
 type=m1.medium
-arch=x86_64
 usetar=
 
 while [ $# -gt 0 ] ; do
   case "$1" in
-    -a | --arch)    arch="$2"; shift;;
     -t | --type)    type="$2"; shift;;
     -R | --rpm)     usetar="";;
     -T | --tar)     usetar="true";;
@@ -26,11 +24,10 @@ fi
 source "$bin"/env.sh
 
 echo "INSTANCE_TYPE is $type"
-echo "ARCH is $arch"
 echo "IMAGE_VERSION is $IMAGE_VERSION"
 echo "AWS_ENDPOINT is $AWS_ENDPOINT"
 
-AMI_IMAGE=`ec2-describe-images $TOOL_OPTS -a | grep $S3_ACCOUNT | grep $IMAGE_VERSION-$arch | grep available | awk '{print $2}'`
+AMI_IMAGE=`ec2-describe-images $TOOL_OPTS -a | grep $S3_ACCOUNT | grep $IMAGE_VERSION | grep available | awk '{print $2}'`
 
 [ ! -z $AMI_IMAGE ] && echo "AMI already registered, use: ec2-deregister $AMI_IMAGE" && exit 1
 
@@ -82,11 +79,11 @@ echo
 
 # Connect to it and run the remote procedure
 echo "Connecting to instance"
-ssh $SSH_OPTS -t -t "ec2-user@$HOSTNAME" "/usr/bin/sudo -i /usr/bin/env ARCH=$arch IMAGE_VERSION=$IMAGE_VERSION /bin/bash /tmp/create-image-remote"
+ssh $SSH_OPTS -t -t "ec2-user@$HOSTNAME" "/usr/bin/sudo -i /usr/bin/env IMAGE_VERSION=$IMAGE_VERSION /bin/bash /tmp/create-image-remote"
 
 # Register image
 
 echo "Registering new image"
-ec2-register $TOOL_OPTS -n $IMAGE_VERSION-$arch $S3_BUCKET/$IMAGE_VERSION-$arch.manifest.xml
+ec2-register $TOOL_OPTS -n $IMAGE_VERSION $S3_BUCKET/$IMAGE_VERSION.manifest.xml
 
 echo "Terminate with: ec2-terminate-instances $INSTANCE"

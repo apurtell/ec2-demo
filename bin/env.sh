@@ -19,7 +19,7 @@ export HBASE_URL=http://www.apache.org/dist/hbase/hbase-$HBASE_VERSION/hbase-$HB
 
 # The version of Hadoop to use and the distribution tarball location
 
-export HADOOP_VERSION=1.0.2
+export HADOOP_VERSION=1.0.3
 export HADOOP_URL=http://www.apache.org/dist/hadoop/common/hadoop-$HADOOP_VERSION/hadoop-$HADOOP_VERSION-bin.tar.gz
 
 ############################################################################
@@ -38,11 +38,9 @@ REQUEST_TIMEOUT=300    # 5 minutes
 # Global tool options
 TOOL_OPTS=`echo -K "$EC2_PRIVATE_KEY" -C "$EC2_CERT" --request-timeout $REQUEST_TIMEOUT`
 
-ARCH=x86_64
+BASE_AMI_VERSION="amzn-ami-pv-2012.03.1.x86_64-s3"
 
-BASE_AMI_VERSION="amzn-ami-pv-2012.03.1.${ARCH}-s3"
+EPEL_RPM=http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-5.noarch.rpm
 
-EPEL_RPM=http://dl.fedoraproject.org/pub/epel/6/${ARCH}/epel-release-6-5.noarch.rpm
-
-JAVA_VERSION=1.7.0_4
-JAVA_RPM=http://tm-files-west.s3.amazonaws.com/jdk/jdk-${JAVA_VERSION}-linux-${ARCH}.rpm
+JAVA_VERSION=1.7.0_5
+JAVA_RPM=http://tm-files-west.s3.amazonaws.com/jdk/jdk-${JAVA_VERSION}-linux-x86_64.rpm

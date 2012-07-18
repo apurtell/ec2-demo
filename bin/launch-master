@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-arch=x86_64
 type=m1.xlarge
 secgroup=default
 monitoring=
@@ -9,7 +8,6 @@ ami=
 
 while [ $# -gt 0 ] ; do
   case "$1" in
-    -a | --arch)       arch="$2"; shift;;
     -t | --type)       type="$2"; shift;;
     -m | --monitoring) monitoring=yes;;
     -s | --secgroup)   secgroup="$2"; shift;;
@@ -30,12 +28,11 @@ if [ -f "$bin"/credentials.sh ] ; then
 fi
 source "$bin"/env.sh
 
-echo "ARCH: $arch"
 echo "TYPE: $type"
 echo "IMAGE_VERSION: $IMAGE_VERSION"
 
 if [ -z $ami ] ; then
-  AMI_IMAGE=`ec2-describe-images $TOOL_OPTS -a | grep $S3_ACCOUNT | grep $IMAGE_VERSION-$arch | grep available | awk '{print $2}'`
+  AMI_IMAGE=`ec2-describe-images $TOOL_OPTS -a | grep $S3_ACCOUNT | grep $IMAGE_VERSION | grep available | awk '{print $2}'`
 else
   AMI_IMAGE=$ami
 fi

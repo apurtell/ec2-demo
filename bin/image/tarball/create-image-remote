@@ -8,9 +8,6 @@ if [ -f "$bin"/credentials.sh ] ; then
 fi
 source "$bin"/env.sh
 
-ARCH=`uname -m | sed -e s/i.86/i386/`
-
-echo "Remote: ARCH is $ARCH"
 echo "Remote: JAVA_RPM is $JAVA_RPM"
 echo "Remote: HADOOP_VERSION is $HADOOP_VERSION"
 echo "Remote: HADOOP_URL is $HADOOP_URL"
@@ -172,13 +169,15 @@ rm -f /etc/zookeeper/zoo.cfg
 
 mv /root/.ssh/authorized_keys /media/ephemeral0/
 
+yum -y clean all
+
 cd ~root
 
 ####################
 # Bundle volume
 
 echo "Bundling volume"
-ec2-bundle-vol -d /media/ephemeral0 -k /media/ephemeral0/key.pem -c /media/ephemeral0/cert.pem -u $AWS_ACCOUNT_ID -s 3072 -p $IMAGE_VERSION-$ARCH -r $ARCH
+ec2-bundle-vol -d /media/ephemeral0 -k /media/ephemeral0/key.pem -c /media/ephemeral0/cert.pem -u $AWS_ACCOUNT_ID -s 3072 -p $IMAGE_VERSION -r x86_64
 
 # now we can move the key back
 mv /media/ephemeral0/authorized_keys /root/.ssh/
@@ -186,8 +185,8 @@ mv /media/ephemeral0/authorized_keys /root/.ssh/
 ####################
 # Upload bundle
 
-echo "Uploading new bundle $IMAGE_VERSION-$ARCH"
+echo "Uploading new bundle $IMAGE_VERSION"
 [ -n "$REGION" -a "$REGION" != "us-east-1" ] && LOC="--location $REGION"
-ec2-upload-bundle --access-key $AWS_ACCESS_KEY_ID --secret-key $AWS_SECRET_ACCESS_KEY  --bucket $S3_BUCKET --manifest /media/ephemeral0/$IMAGE_VERSION-$ARCH.manifest.xml $LOC
+ec2-upload-bundle --access-key $AWS_ACCESS_KEY_ID --secret-key $AWS_SECRET_ACCESS_KEY  --bucket $S3_BUCKET --manifest /media/ephemeral0/$IMAGE_VERSION.manifest.xml $LOC
 
 echo "Done"
