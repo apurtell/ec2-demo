@@ -1,6 +1,6 @@
 #!/bin/bash
 
-type=m1.small
+type=m1.medium
 arch=x86_64
 usetar=
 
