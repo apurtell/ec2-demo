@@ -5,6 +5,7 @@ secgroup=default
 monitoring=
 zone=
 ami=
+keypair=root
 
 while [ $# -gt 0 ] ; do
   case "$1" in
@@ -13,6 +14,7 @@ while [ $# -gt 0 ] ; do
     -s | --secgroup)   secgroup="$2"; shift;;
     -z | --zone)       zone="$2"; shift;;
     --ami)             ami="$2"; shift;;
+    -k | --keypair)    keypair="$2"; shift;;
     --)                shift; break;;
     -*)                shift;;
     *)                 break;;
@@ -46,7 +48,7 @@ cat "$bin"/image/tarball/setup-remote >> /tmp/userdata$$
 cat "$bin"/image/tarball/setup-master-remote.post >> /tmp/userdata$$
 gzip -9 /tmp/userdata$$
 
-CMD="ec2-run-instances $AMI_IMAGE $TOOL_OPTS -k root -t $type -g $secgroup -f /tmp/userdata$$.gz"
+CMD="ec2-run-instances $AMI_IMAGE $TOOL_OPTS -k $keypair -t $type -g $secgroup -f /tmp/userdata$$.gz"
 if [ ! -z "$monitoring" ] ; then
   CMD="$CMD -m"
 fi

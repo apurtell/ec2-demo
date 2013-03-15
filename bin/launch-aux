@@ -8,6 +8,7 @@ price=0.5
 zone=
 ami=
 on_demand=
+keypair=root
 
 while [ $# -gt 0 ] ; do
   case "$1" in
@@ -18,6 +19,7 @@ while [ $# -gt 0 ] ; do
     -s | --secgroup)   secgroup="$2"; shift;;
     -z | --zone)       zone="$2"; shift;;
     -o | --on-demand)  on_demand=y ;;
+    -k | --keypair)    keypair="$2"; shift;;
     --ami)             ami="$2"; shift;;
     --)                shift; break;;
     -*)                shift;;
@@ -69,9 +71,9 @@ cat "$bin"/image/tarball/setup-aux-remote.post >> /tmp/userdata$$
 gzip -9 /tmp/userdata$$
 
 if [ ! -z "$on_demand" ] ; then
-  CMD="ec2-run-instances $AMI_IMAGE $TOOL_OPTS -n $nrhosts -k root -t $type -g $secgroup -f /tmp/userdata$$.gz"
+  CMD="ec2-run-instances $AMI_IMAGE $TOOL_OPTS -n $nrhosts -k $keypair -t $type -g $secgroup -f /tmp/userdata$$.gz"
 else
-  CMD="ec2-request-spot-instances $AMI_IMAGE $TOOL_OPTS -n $nrhosts -k root -t $type -g $secgroup -p $price -f /tmp/userdata$$.gz"
+  CMD="ec2-request-spot-instances $AMI_IMAGE $TOOL_OPTS -n $nrhosts -k $keypair -t $type -g $secgroup -p $price -f /tmp/userdata$$.gz"
 fi
 if [ ! -z "$monitoring" ] ; then
   CMD="$CMD -m"

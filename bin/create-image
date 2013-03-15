@@ -2,12 +2,14 @@
 
 type=m1.medium
 usetar=
+keypair=root
 
 while [ $# -gt 0 ] ; do
   case "$1" in
     -t | --type)    type="$2"; shift;;
     -R | --rpm)     usetar="";;
     -T | --tar)     usetar="true";;
+    -k | --keypair) keypair="$2"; shift;;
     --)             shift; break;;
     -*)             shift;;
     *)              break;;
@@ -34,7 +36,7 @@ AMI_IMAGE=`ec2-describe-images $TOOL_OPTS -a | grep $S3_ACCOUNT | grep $IMAGE_VE
 BASE_AMI_IMAGE=`ec2-describe-images $TOOL_OPTS -a | grep $BASE_AMI_VERSION | awk '{print $2}'`
 echo "BASE_AMI_IMAGE is $BASE_AMI_IMAGE"
 
-OUTPUT=`ec2-run-instances $BASE_AMI_IMAGE $TOOL_OPTS -k root -t $type`
+OUTPUT=`ec2-run-instances $BASE_AMI_IMAGE $TOOL_OPTS -k $keypair -t $type`
 INSTANCE=`echo $OUTPUT | awk '{print $6}'`
 echo "INSTANCE is $INSTANCE"
 
