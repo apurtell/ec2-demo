@@ -12,6 +12,7 @@
      export EC2_CERT=/home/apurtell/.ec2/cert-tm-master.pem
      export EC2_ROOT_SSH_KEY=/home/apurtell/.ec2/root-us-west-1-tm-master.pem
 
+     EC2_ROOT_SSH_KEY should be the path in the local file system where the .pem     file of the keypair that is to be used for creating images/launching instan     ces 	
    Configure bin/env.sh
 
      Set REGION to the region you would like to use.
