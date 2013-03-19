@@ -55,6 +55,7 @@ echo "IMAGE_VERSION: $IMAGE_VERSION"
 echo "MASTER_HOST: $MASTER_HOST"
 
 if [ -z $ami ] ; then
+  echo "Searching for AMI for $IMAGE_VERSION (may take some time if on a slow network)..."
   AMI_IMAGE=`ec2-describe-images $TOOL_OPTS -a | grep $S3_ACCOUNT | grep $IMAGE_VERSION | grep available | awk '{print $2}'`
 else
   AMI_IMAGE=$ami
