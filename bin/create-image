@@ -1,15 +1,14 @@
 #!/bin/bash
 
 type=m1.medium
-usetar=
 keypair=root
+skip_ami_check=
 
 while [ $# -gt 0 ] ; do
   case "$1" in
     -t | --type)    type="$2"; shift;;
-    -R | --rpm)     usetar="";;
-    -T | --tar)     usetar="true";;
     -k | --keypair) keypair="$2"; shift;;
+    -n | --skip-check) skip_ami_check=yes;;
     --)             shift; break;;
     -*)             shift;;
     *)              break;;
@@ -28,11 +27,13 @@ echo "S3_BUCKET is $S3_BUCKET"
 echo "INSTANCE_TYPE is $type"
 echo "IMAGE_VERSION is $IMAGE_VERSION"
 echo "AWS_ENDPOINT is $AWS_ENDPOINT"
+if [ -z "$skip_ami_check" ] ; then
+  echo "Searching for existing AMI (may take some time if on a slow network, skip with '-n')..."
+  AMI_IMAGE=`ec2-describe-images $TOOL_OPTS -a | grep $S3_ACCOUNT | grep $IMAGE_VERSION | grep available | awk '{print $2}'`
+  [ ! -z $AMI_IMAGE ] && echo "AMI already registered, use: ec2-deregister $AMI_IMAGE" && exit 1
+fi
 
-AMI_IMAGE=`ec2-describe-images $TOOL_OPTS -a | grep $S3_ACCOUNT | grep $IMAGE_VERSION | grep available | awk '{print $2}'`
-
-[ ! -z $AMI_IMAGE ] && echo "AMI already registered, use: ec2-deregister $AMI_IMAGE" && exit 1
-
+echo "Searching for base AMI (may take some time if on a slow network)..."
 BASE_AMI_IMAGE=`ec2-describe-images $TOOL_OPTS -a | grep $BASE_AMI_VERSION | awk '{print $2}'`
 echo "BASE_AMI_IMAGE is $BASE_AMI_IMAGE"
 
@@ -81,7 +82,7 @@ echo
 
 # Connect to it and run the remote procedure
 echo "Connecting to instance"
-ssh $SSH_OPTS -t -t "ec2-user@$HOSTNAME" "/usr/bin/sudo -i /usr/bin/env IMAGE_VERSION=$IMAGE_VERSION /bin/bash /tmp/create-image-remote"
+ssh $SSH_OPTS -t -t "ec2-user@$HOSTNAME" "/usr/bin/sudo -i /usr/bin/env IMAGE_VERSION=$IMAGE_VERSION S3_BUCKET=$S3_BUCKET /bin/bash /tmp/create-image-remote"
 
 # Register image
 
