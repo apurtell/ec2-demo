@@ -6,7 +6,7 @@ REGION=${REGION:-us-east-1}
 #REGION=${REGION:-eu-west-1}
 #REGION=${REGION:-ap-northeast-1}
 #REGION=${REGION:-ap-southeast-1}
-S3_BUCKET=${S3_BUCKET:intel-hadoop-bundles-$REGION}
+S3_BUCKET=${S3_BUCKET:-intel-hadoop-bundles-$REGION}
 # Account for bucket
 # We need this because S3 is returning account identifiers instead of bucket
 # names.
