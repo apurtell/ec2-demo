@@ -24,7 +24,7 @@ if [ -f "$bin"/credentials.sh ] ; then
   source "$bin"/credentials.sh
 fi
 source "$bin"/env.sh
-
+echo "S3_BUCKET is $S3_BUCKET"
 echo "INSTANCE_TYPE is $type"
 echo "IMAGE_VERSION is $IMAGE_VERSION"
 echo "AWS_ENDPOINT is $AWS_ENDPOINT"
