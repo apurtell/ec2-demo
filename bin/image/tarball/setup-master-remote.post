@@ -2,12 +2,12 @@
 service gmond start
 service gmetad start
 apachectl start
-
+sudo
 # Start NameNode
-su -s /bin/sh hdfs -c "/usr/lib/hadoop/bin/hadoop namenode -format && /usr/lib/hadoop/bin/hadoop-daemon.sh --config /etc/hadoop/conf start namenode"
+sudo su -s /bin/sh hdfs -c "/usr/lib/hadoop/bin/hadoop namenode -format && /usr/lib/hadoop/bin/hadoop-daemon.sh --config /etc/hadoop/conf start namenode"
 
 # Set permissions
-su -s /bin/sh hdfs -c "kinit -k -t /etc/hadoop/conf/hdfs.keytab hdfs/$HOSTNAME ; kinit -R ; /usr/lib/hadoop/bin/hadoop fs -mkdir /user/mapred ; /usr/lib/hadoop/bin/hadoop fs -mkdir /tmp ; /usr/lib/hadoop/bin/hadoop fs -chmod 777 /tmp ; /usr/lib/hadoop/bin/hadoop fs -mkdir /mapred/system ; /usr/lib/hadoop/bin/hadoop fs -chown -R mapred /mapred /user/mapred ; /usr/lib/hadoop/bin/hadoop fs -mkdir /hbase ; /usr/lib/hadoop/bin/hadoop fs -chown -R hbase /hbase"
+sudo su -s /bin/sh hdfs -c "kinit -k -t /etc/hadoop/conf/hdfs.keytab hdfs/$HOSTNAME ; kinit -R ; /usr/lib/hadoop/bin/hadoop fs -mkdir /user/mapred ; /usr/lib/hadoop/bin/hadoop fs -mkdir /tmp ; /usr/lib/hadoop/bin/hadoop fs -chmod 777 /tmp ; /usr/lib/hadoop/bin/hadoop fs -mkdir /mapred/system ; /usr/lib/hadoop/bin/hadoop fs -chown -R mapred /mapred /user/mapred ; /usr/lib/hadoop/bin/hadoop fs -mkdir /hbase ; /usr/lib/hadoop/bin/hadoop fs -chown -R hbase /hbase"
 
 # Start JobTracker
 su -s /bin/sh mapred -c "/usr/lib/hadoop/bin/hadoop-daemon.sh --config /etc/hadoop/conf start jobtracker"
