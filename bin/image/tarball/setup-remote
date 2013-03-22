@@ -916,7 +916,7 @@ EOF
 # Configure Ganglia
 
 sed -i -e "s|\( *mcast_join *=.*\)|#\1|" \
-  -e "s|\( *bind *=.*\)|#\1|" \
+  -e "s|\( \sbind *=.*\)|#\1|" \
   -e "s|\(udp_send_channel {\)|\1\n  host=$MASTER_HOST|" \
   /etc/ganglia/gmond.conf
 
