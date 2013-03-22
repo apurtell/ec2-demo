@@ -4,17 +4,17 @@ service gmetad start
 apachectl start
 
 # Start NameNode
-sudo su -s /bin/sh hdfs -c "/usr/lib/hadoop/bin/hadoop namenode -format && /usr/lib/hadoop/bin/hadoop-daemon.sh --config /etc/hadoop/conf start namenode"
+su -s /bin/sh hdfs -c "/usr/lib/hadoop/bin/hadoop namenode -format && /usr/lib/hadoop/bin/hadoop-daemon.sh --config /etc/hadoop/conf start namenode"
 
 # Set permissions
-sudo su -s /bin/sh hdfs -c "kinit -k -t /etc/hadoop/conf/hdfs.keytab hdfs/$HOSTNAME ; kinit -R ; /usr/lib/hadoop/bin/hadoop fs -mkdir /user/mapred ; /usr/lib/hadoop/bin/hadoop fs -mkdir /tmp ; /usr/lib/hadoop/bin/hadoop fs -chmod 777 /tmp ; /usr/lib/hadoop/bin/hadoop fs -mkdir /mapred/system ; /usr/lib/hadoop/bin/hadoop fs -chown -R mapred /mapred /user/mapred ; /usr/lib/hadoop/bin/hadoop fs -mkdir /hbase ; /usr/lib/hadoop/bin/hadoop fs -chown -R hbase /hbase"
+su -s /bin/sh hdfs -c "kinit -k -t /etc/hadoop/conf/hdfs.keytab hdfs/$HOSTNAME ; kinit -R ; /usr/lib/hadoop/bin/hadoop fs -mkdir /user/mapred ; /usr/lib/hadoop/bin/hadoop fs -mkdir /tmp ; /usr/lib/hadoop/bin/hadoop fs -chmod 777 /tmp ; /usr/lib/hadoop/bin/hadoop fs -mkdir /mapred/system ; /usr/lib/hadoop/bin/hadoop fs -chown -R mapred /mapred /user/mapred ; /usr/lib/hadoop/bin/hadoop fs -mkdir /hbase ; /usr/lib/hadoop/bin/hadoop fs -chown -R hbase /hbase"
 
 # Start JobTracker
-sudo su -s /bin/sh mapred -c "/usr/lib/hadoop/bin/hadoop-daemon.sh --config /etc/hadoop/conf start jobtracker"
+su -s /bin/sh mapred -c "/usr/lib/hadoop/bin/hadoop-daemon.sh --config /etc/hadoop/conf start jobtracker"
 
 # Start ZooKeeper (but managed by HBase)
-sudo su -s /bin/sh hbase -c "/usr/lib/hbase/bin/hbase-daemon.sh --config /etc/hbase/conf start zookeeper"
+ su -s /bin/sh hbase -c "/usr/lib/hbase/bin/hbase-daemon.sh --config /etc/hbase/conf start zookeeper"
 sleep 10
 
 # Start the HBase master
-sudo su -s /bin/sh hbase -c "/usr/lib/hbase/bin/hbase-daemon.sh --config /etc/hbase/conf start master"
+su -s /bin/sh hbase -c "/usr/lib/hbase/bin/hbase-daemon.sh --config /etc/hbase/conf start master"
