@@ -171,6 +171,9 @@ mv /root/.ssh/authorized_keys /media/ephemeral0/
 
 yum -y clean all
 
+# Sometimes openssl is not getting installed.  Hence installing the same
+yum -y install openssl
+
 cd ~root
 
 ####################

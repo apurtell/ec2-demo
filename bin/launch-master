@@ -44,6 +44,7 @@ echo "AMI_IMAGE: $AMI_IMAGE"
 
 [ -z $AMI_IMAGE ] && echo "No AMI found" && exit 1
 
+
 cat "$bin"/image/tarball/setup-master-remote.pre > /tmp/userdata$$
 cat "$bin"/image/tarball/setup-remote >> /tmp/userdata$$
 cat "$bin"/image/tarball/setup-master-remote.post >> /tmp/userdata$$
@@ -59,6 +60,7 @@ fi
 OUTPUT=`$CMD`
 INSTANCE=`echo $OUTPUT | awk '{print $6}'`
 echo $OUTPUT
+echo "INSTANCE is $INSTANCE"
 
 rm -f /tmp/userdata$$.gz
 

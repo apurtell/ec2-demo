@@ -621,7 +621,7 @@ ln -s /etc/hadoop/conf/taskcontroller.cfg /etc/hadoop
 
 cat >> /etc/hadoop/conf/hadoop-env.sh <<EOF
 export HADOOP_NAMENODE_OPTS="-Xmn64m -Xms4g -Xmx4g -XX:+UseConcMarkSweepGC -XX:+CMSParallelRemarkEnabled -XX:+UseParNewGC"
-export HADOOP_SECONDARYNAMENODE_OPTS="$HADOOP_NAMENODE_OPTS"
+export HADOOP_SECONDARYNAMENODE_OPTS=`echo "$HADOOP_NAMENODE_OPTS"
 export HADOOP_DATANODE_OPTS="-Xms1g -Xmx1g -XX:+UseConcMarkSweepGC -XX:+CMSParallelRemarkEnabled -XX:+UseParNewGC"
 EOF
 
