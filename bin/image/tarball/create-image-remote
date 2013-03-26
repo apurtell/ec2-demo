@@ -41,6 +41,10 @@ sed -i -e s/enabled=0/enabled=1/ /etc/yum.repos.d/epel.repo
 echo "Installing RPMs"
 yum -y install screen ganglia-gmetad ganglia-gmond ganglia-web httpd php lzo xfsprogs krb5-server krb5-workstation
 
+
+# Sometimes openssl is not getting installed.  Hence installing the same
+yum -y install openssl
+
 ####################
 # Set up user accounts
 
@@ -64,6 +68,34 @@ usermod -s /bin/bash -U mapred
 
 ####################
 # Install Hadoop
+echo "Checking for hadoop version"
+if [ "$HADOOP_VERSION" = "1.0.4" ]; then
+	echo "Installing Hadoop $HADOOP_VERSION."
+	cd /usr/lib
+	wget -O hadoop.tgz $HADOOP_URL
+	tar xzf hadoop.tgz
+	rm -f hadoop.tgz
+	ln -s hadoop-$HADOOP_VERSION hadoop
+	mkdir /var/log/hadoop /var/run/hadoop
+	chown hdfs:hadoop /var/log/hadoop /var/run/hadoop
+	chmod 775 /var/log/hadoop /var/run/hadoop
+	ln -s /var/log/hadoop /usr/lib/hadoop/logs
+	mkdir -p /etc/hadoop/conf
+	rm -rf /usr/lib/hadoop/conf
+	ln -s /etc/hadoop/conf /usr/lib/hadoop/conf
+	ln -s /usr/lib/hadoop/hadoop-core-$HADOOP_VERSION.jar /usr/lib/hadoop/hadoop-core.jar
+	ln -s /usr/lib/hadoop/hadoop-test-$HADOOP_VERSION.jar /usr/lib/hadoop/hadoop-test.jar
+	# fix task controller ownership and permissions
+	find /usr/lib/hadoop/ -name task-controller -exec chown root:mapred \{} \;
+	find /usr/lib/hadoop/ -name task-controller -exec chmod 4750 \{} \;
+cat > /etc/profile.d/hadoop.sh <<EOF
+export PATH=\$PATH:/usr/lib/hadoop/bin
+EOF
+	chmod 755 /etc/profile.d/hadoop.sh
+fi
+
+####################
+# Install Hadoop-2.0.3
 
 echo "Installing Hadoop $HADOOP_VERSION."
 cd /usr/lib
@@ -77,9 +109,43 @@ chmod 775 /var/log/hadoop /var/run/hadoop
 ln -s /var/log/hadoop /usr/lib/hadoop/logs
 mkdir -p /etc/hadoop/conf
 rm -rf /usr/lib/hadoop/conf
-ln -s /etc/hadoop/conf /usr/lib/hadoop/conf
-ln -s /usr/lib/hadoop/hadoop-core-$HADOOP_VERSION.jar /usr/lib/hadoop/hadoop-core.jar
-ln -s /usr/lib/hadoop/hadoop-test-$HADOOP_VERSION.jar /usr/lib/hadoop/hadoop-test.jar
+
+echo "common"
+ln -s /etc/hadoop/conf /usr/lib/hadoop/etc/hadoop/conf
+ln -s /usr/lib/hadoop/share/hadoop/common/hadoop-common-$HADOOP_VERSION.jar /usr/lib/hadoop/share/hadoop/common/hadoop-common.jar
+ln -s /usr/lib/hadoop/share/hadoop/common/hadoop-common-$HADOOP_VERSION-tests.jar /usr/lib/hadoop/share/hadoop/common/hadoop-common-tests.jar
+
+ln -s /usr/lib/hadoop/share/hadoop/hdfs/hadoop-hdfs-$HADOOP_VERSION.jar /usr/lib/hadoop/share/hadoop/hdfs/hadoop-hdfs.jar
+ln -s /usr/lib/hadoop/share/hadoop/hdfs/hadoop-hdfs-$HADOOP_VERSION-tests.jar /usr/lib/hadoop/share/hadoop/hdfs/hadoop-hdfs-tests.jar
+
+echo "starting mapreduce"
+ln -s /usr/lib/hadoop/share/hadoop/mapreduce/hadoop-mapreduce-client-$HADOOP_VERSION.jar /usr/lib/hadoop/share/hadoop/mapreduce/hadoop-mapreduce-client.jar
+ln -s /usr/lib/hadoop/share/hadoop/mapreduce/hadoop-mapreduce-client-common-$HADOOP_VERSION.jar /usr/lib/hadoop/share/hadoop/mapreduce/hadoop-mapreduce-client-common.jar
+ln -s /usr/lib/hadoop/share/hadoop/mapreduce/hadoop-mapreduce-client-core-$HADOOP_VERSION.jar /usr/lib/hadoop/share/hadoop/mapreduce/hadoop-mapreduce-client-core.jar
+ln -s /usr/lib/hadoop/share/hadoop/mapreduce/hadoop-mapreduce-client-hs-$HADOOP_VERSION.jar /usr/lib/hadoop/share/hadoop/mapreduce/hadoop-mapreduce-client-hs.jar
+ln -s /usr/lib/hadoop/share/hadoop/mapreduce/hadoop-mapreduce-client-hs-plugins-$HADOOP_VERSION.jar /usr/lib/hadoop/share/hadoop/mapreduce/hadoop-mapreduce-client-hs-plugins.jar
+ln -s /usr/lib/hadoop/share/hadoop/mapreduce/hadoop-mapreduce-client-jobclient-plugins-$HADOOP_VERSION.jar /usr/lib/hadoop/share/hadoop/mapreduce/hadoop-mapreduce-client-jobclient-plugins.jar
+ln -s /usr/lib/hadoop/share/hadoop/mapreduce/hadoop-mapreduce-client-jobclient-$HADOOP_VERSION.jar /usr/lib/hadoop/share/hadoop/mapreduce/hadoop-mapreduce-client-jobclient.jar
+ln -s /usr/lib/hadoop/share/hadoop/mapreduce/hadoop-mapreduce-client-jobclient-$HADOOP_VERSION-tests.jar /usr/lib/hadoop/share/hadoop/mapreduce/hadoop-mapreduce-client-jobclient-tests.jar
+ln -s /usr/lib/hadoop/share/hadoop/mapreduce/hadoop-mapreduce-client-shuffle-$HADOOP_VERSION.jar /usr/lib/hadoop/share/hadoop/mapreduce/hadoop-mapreduce-client-shuffle.jar
+ln -s /usr/lib/hadoop/share/hadoop/mapreduce/hadoop-mapreduce-examples-$HADOOP_VERSION.jar /usr/lib/hadoop/share/hadoop/mapreduce/hadoop-mapreduce-examples.jar
+echo "starting yarn"
+ln -s /usr/lib/hadoop/share/hadoop/yarn/hadoop-yarn-api-$HADOOP_VERSION.jar /usr/lib/hadoop/share/hadoop/yarn/hadoop-yarn-api.jar
+ln -s /usr/lib/hadoop/share/hadoop/yarn/hadoop-yarn-applications-distributedshell-$HADOOP_VERSION.jar /usr/lib/hadoop/share/hadoop/yarn/hadoop-yarn-applications-distributedshell.jar
+ln -s /usr/lib/hadoop/share/hadoop/yarn/hadoop-yarn-applications-unmanaged-am-launcher-$HADOOP_VERSION.jar /usr/lib/hadoop/share/hadoop/yarn/hadoop-yarn-applications-unmanaged-am-launcher.jar
+ln -s /usr/lib/hadoop/share/hadoop/yarn/hadoop-yarn-client-$HADOOP_VERSION.jar /usr/lib/hadoop/share/hadoop/yarn/hadoop-yarn-client.jar
+ln -s /usr/lib/hadoop/share/hadoop/yarn/hadoop-yarn-common-$HADOOP_VERSION.jar /usr/lib/hadoop/share/hadoop/yarn/hadoop-yarn-common.jar
+ln -s /usr/lib/hadoop/share/hadoop/yarn/hadoop-yarn-server-common-$HADOOP_VERSION.jar /usr/lib/hadoop/share/hadoop/yarn/hadoop-yarn-server-common.jar
+ln -s /usr/lib/hadoop/share/hadoop/yarn/hadoop-yarn-server-nodemanager-$HADOOP_VERSION.jar /usr/lib/hadoop/share/hadoop/yarn/hadoop-yarn-server-nodemanager.jar
+ln -s /usr/lib/hadoop/share/hadoop/yarn/hadoop-yarn-server-resourcemanager-$HADOOP_VERSION.jar /usr/lib/hadoop/share/hadoop/yarn/hadoop-yarn-server-resourcemanager.jar
+ln -s /usr/lib/hadoop/share/hadoop/yarn/hadoop-yarn-server-tests-$HADOOP_VERSION.jar /usr/lib/hadoop/share/hadoop/yarn/hadoop-yarn-server-tests.jar
+ln -s /usr/lib/hadoop/share/hadoop/yarn/hadoop-yarn-server-tests-$HADOOP_VERSION-tests.jar /usr/lib/hadoop/share/hadoop/yarn/hadoop-yarn-server-tests-alpha.jar
+ln -s /usr/lib/hadoop/share/hadoop/yarn/hadoop-yarn-server-web-proxy-$HADOOP_VERSION.jar /usr/lib/hadoop/share/hadoop/yarn/hadoop-yarn-server-web-proxy.jar
+ln -s /usr/lib/hadoop/share/hadoop/yarn/hadoop-yarn-site-$HADOOP_VERSION.jar /usr/lib/hadoop/share/hadoop/yarn/hadoop-yarn-site.jar
+echo "yarn completed"
+
+
+
 # fix task controller ownership and permissions
 find /usr/lib/hadoop/ -name task-controller -exec chown root:mapred \{} \;
 find /usr/lib/hadoop/ -name task-controller -exec chmod 4750 \{} \;
@@ -170,9 +236,6 @@ rm -f /etc/zookeeper/zoo.cfg
 mv /root/.ssh/authorized_keys /media/ephemeral0/
 
 yum -y clean all
-
-# Sometimes openssl is not getting installed.  Hence installing the same
-yum -y install openssl
 
 cd ~root
 
