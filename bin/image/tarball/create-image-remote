@@ -45,6 +45,11 @@ yum -y install screen ganglia-gmetad ganglia-gmond ganglia-web httpd php lzo xfs
 # Sometimes openssl is not getting installed.  Hence installing the same
 yum -y install openssl
 
+#The jsvc has to be installed
+if [ "$HADOOP_VERSION" = "2.0.3-alpha" ]; then
+	yum -y install jsvc
+fi
+
 ####################
 # Set up user accounts
 

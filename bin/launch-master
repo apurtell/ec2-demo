@@ -47,7 +47,11 @@ echo "AMI_IMAGE: $AMI_IMAGE"
 
 cat "$bin"/image/tarball/setup-master-remote.pre > /tmp/userdata$$
 cat "$bin"/image/tarball/setup-remote >> /tmp/userdata$$
-cat "$bin"/image/tarball/setup-master-remote.post >> /tmp/userdata$$
+if [ "$HADOOP_VERSION" = "1.0.4" ]; then
+	cat "$bin"/image/tarball/setup-master-remote.post >> /tmp/userdata$$
+else
+        cat "$bin"/image/tarball/setup-master-remote_hadoop-2.0.3.post >> /tmp/userdata$$
+fi
 gzip -9 /tmp/userdata$$
 
 CMD="ec2-run-instances $AMI_IMAGE $TOOL_OPTS -k $keypair -t $type -g $secgroup -f /tmp/userdata$$.gz"

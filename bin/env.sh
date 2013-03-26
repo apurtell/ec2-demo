@@ -19,8 +19,8 @@ export HBASE_URL=http://www.apache.org/dist/hbase/hbase-$HBASE_VERSION/hbase-$HB
 
 # The version of Hadoop to use and the distribution tarball location
 
-export HADOOP_VERSION=1.0.4
-export HADOOP_URL=http://www.apache.org/dist/hadoop/common/hadoop-$HADOOP_VERSION/hadoop-$HADOOP_VERSION-bin.tar.gz
+export HADOOP_VERSION=2.0.3-alpha
+export HADOOP_URL=http://www.apache.org/dist/hadoop/common/hadoop-$HADOOP_VERSION/hadoop-$HADOOP_VERSION.tar.gz
 
 ############################################################################
 # Generally, users do not need to edit below
