@@ -100,6 +100,7 @@ EOF
 fi
 
 ####################
+if [ "$HADOOP_VERSION" = "2.0.3-alpha" ]; then
 # Install Hadoop-2.0.3
 
 echo "Installing Hadoop $HADOOP_VERSION."
@@ -158,8 +159,9 @@ cat > /etc/profile.d/hadoop.sh <<EOF
 export PATH=\$PATH:/usr/lib/hadoop/bin
 EOF
 chmod 755 /etc/profile.d/hadoop.sh
-
+fi
 ####################
+if [ "$HBASE_VERSION" = "0.94.5" ]; then
 # Install HBase
 
 echo "Installing HBase $HBASE_VERSION."
@@ -193,6 +195,63 @@ chmod 755 /etc/profile.d/hbase.sh
 cat >> /root/.bashrc <<EOF
 export PATH=\$PATH:/usr/lib/hadoop/bin:/usr/lib/hbase/bin
 EOF
+fi
+
+####################
+
+if [ "$HBASE_VERSION" = "0.97-SNAPSHOT" ]; then
+# Install HBase
+
+echo "Installing HBase $HBASE_VERSION."
+cd /usr/lib
+wget -O hbase.tgz $HBASE_URL
+#Currently hardcoding to get it from Ram's bucket
+#s3cmd get  s3://Ram_bucket_us-east-1/hbase-0.97-SNAPSHOT.tar.gz hbase-0.97-SNAPSHOT.tar.gz
+tar xzf hbase.tgz
+rm -f hbase.tgz
+ln -s hbase-$HBASE_VERSION hbase
+mkdir /var/log/hbase /var/run/hbase
+chown hbase:hadoop /var/log/hbase /var/run/hbase
+chmod 775 /var/log/hbase /var/run/hbase
+ln -s /var/log/hbase /usr/lib/hbase/logs
+mkdir -p /etc/hbase/conf
+rm -rf /usr/lib/hbase/conf
+ln -s /etc/hbase/conf /usr/lib/hbase/conf
+# version independent symlinks
+ln -s /usr/lib/hbase/lib/hbase-client-$HBASE_VERSION.jar /usr/lib/hbase/lib/hbase-client.jar
+ln -s /usr/lib/hbase/lib/hbase-common-$HBASE_VERSION.jar /usr/lib/hbase/lib/hbase-common.jar
+ln -s /usr/lib/hbase/lib/hbase-common-$HBASE_VERSION-tests.jar /usr/lib/hbase/lib/hbase-common-tests.jar
+ln -s /usr/lib/hbase/lib/hbase-examples-$HBASE_VERSION.jar /usr/lib/hbase/lib/hbase-examples.jar
+ln -s /usr/lib/hbase/lib/hbase-hadoop2-compat-$HBASE_VERSION.jar /usr/lib/hbase/lib/hbase-hadoop2-compat.jar
+ln -s /usr/lib/hbase/lib/hbase-hadoop-compat-$HBASE_VERSION.jar /usr/lib/hbase/lib/hbase-hadoop-compat.jar
+ln -s /usr/lib/hbase/lib/hbase-it-$HBASE_VERSION.jar /usr/lib/hbase/lib/hbase-it.jar
+ln -s /usr/lib/hbase/lib/hbase-it-$HBASE_VERSION-tests.jar /usr/lib/hbase/lib/hbase-it-tests.jar
+ln -s /usr/lib/hbase/lib/hbase-prefix-tree-$HBASE_VERSION.jar /usr/lib/hbase/lib/hbase-prefix-tree.jar
+ln -s /usr/lib/hbase/lib/hbase-protocol-$HBASE_VERSION.jar /usr/lib/hbase/lib/hbase-protocol.jar
+ln -s /usr/lib/hbase/lib/hbase-server-$HBASE_VERSION.jar /usr/lib/hbase/lib/hbase-server.jar
+ln -s /usr/lib/hbase/lib/hbase-server-$HBASE_VERSION-tests.jar /usr/lib/hbase/lib/hbase-server-tests.jar
+
+ln -s /usr/lib/hbase/lib/zookeeper-*.jar /usr/lib/hbase/lib/zookeeper.jar
+# replace bundled Hadoop jar with a version independent symlink
+rm -f /usr/lib/hbase/lib/hadoop-*.jar
+
+ln -s /usr/lib/hadoop/share/hadoop/common/*.jar /usr/lib/hbase/lib
+ln -s /usr/lib/hadoop/share/hadoop/hdfs/*.jar /usr/lib/hbase/lib
+ln -s /usr/lib/hadoop/share/hadoop/mapreduce/*.jar /usr/lib/hbase/lib
+ln -s /usr/lib/hadoop/share/hadoop/yarn/*.jar /usr/lib/hbase/lib
+# replace lib/native with a symlink to Hadoop native libs
+rm -rf /usr/lib/hbase/lib/native
+ln -s /usr/lib/hadoop/lib/native  /usr/lib/hbase/lib
+cat > /etc/profile.d/hbase.sh <<EOF
+export PATH=\$PATH:/usr/lib/hbase/bin
+EOF
+chmod 755 /etc/profile.d/hbase.sh
+
+# add explicitly to root path
+cat >> /root/.bashrc <<EOF
+export PATH=\$PATH:/usr/lib/hadoop/bin:/usr/lib/hbase/bin
+EOF
+fi
 
 ####################
 # Configure system
