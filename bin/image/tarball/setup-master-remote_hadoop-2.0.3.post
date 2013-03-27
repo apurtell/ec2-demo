@@ -59,12 +59,12 @@ service gmetad start
 apachectl start
 
 # Start NameNode
-su -s /bin/sh hdfs -c "/usr/lib/hadoop/bin/hdfs namenode -format && /usr/lib/hadoop/sbin/hadoop-daemon.sh --config /etc/hadoop/conf start namenode"
-
+su -s /bin/sh hdfs -c "/usr/lib/hadoop/bin/hdfs namenode -format -force && /usr/lib/hadoop/sbin/hadoop-daemon.sh --config /etc/hadoop/conf start namenode"
+sleep 20
 # Set permissions
 su -s /bin/sh hdfs -c "kinit -k -t /etc/hadoop/conf/hdfs.keytab hdfs/$HOSTNAME ; kinit -R ;"
 su -s /bin/sh hdfs -c "/usr/lib/hadoop/bin/hadoop fs -mkdir /user ; /usr/lib/hadoop/bin/hadoop fs -mkdir /user/mapred; /usr/lib/hadoop/bin/hadoop fs -mkdir /tmp ; /usr/lib/hadoop/bin/hadoop fs -chmod 777 /tmp ; /usr/lib/hadoop/bin/hadoop fs -mkdir /mapred; /usr/lib/hadoop/bin/hadoop fs -mkdir /mapred/system; /usr/lib/hadoop/bin/hadoop fs -chown -R mapred /mapred /user/mapred ; /usr/lib/hadoop/bin/hadoop fs -mkdir /hbase ; /usr/lib/hadoop/bin/hadoop fs -chown -R hbase /hbase"
-
+sleep 20
 # Start JobTracker
 #Comment job tracker for now.
 # Only yarn is supported in hadoop-2.0.3

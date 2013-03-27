@@ -150,7 +150,8 @@ ln -s /usr/lib/hadoop/share/hadoop/yarn/hadoop-yarn-server-web-proxy-$HADOOP_VER
 ln -s /usr/lib/hadoop/share/hadoop/yarn/hadoop-yarn-site-$HADOOP_VERSION.jar /usr/lib/hadoop/share/hadoop/yarn/hadoop-yarn-site.jar
 echo "yarn completed"
 
-
+# Replace the RFA to DRFA based on our log4j.properties
+sed -i s/RFA/DRFA/ /usr/lib/hadoop/sbin/hadoop-daemon.sh
 
 # fix task controller ownership and permissions
 find /usr/lib/hadoop/ -name task-controller -exec chown root:mapred \{} \;

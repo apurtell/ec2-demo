@@ -929,8 +929,6 @@ Alias /ganglia /usr/share/ganglia
 </Location>
 EOF
 
-# Replace the RFA to DRFA based on our log4j.properties
-sed -i s/RFA/DRFA/ /usr/lib/hadoop/sbin/hadoop-daemon.sh
 
 # XXX: Temporary fix for ZOOKEEPER-1437 until it is applied upstream
 
