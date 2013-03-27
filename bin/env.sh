@@ -13,14 +13,21 @@ S3_BUCKET=${S3_BUCKET:-intel-hadoop-bundles-$REGION}
 S3_ACCOUNT=${S3_ACCOUNT:-$AWS_ACCOUNT_ID}
 
 # The version of HBase to use and the distribution tarball location
+#export HBASE_VERSION=0.94.5
+#export HBASE_URL=http://www.apache.org/dist/hbase/hbase-$HBASE_VERSION/hbase-$HBASE_VERSION-security.tar.gz
 
-export HBASE_VERSION=0.94.5
-export HBASE_URL=http://www.apache.org/dist/hbase/hbase-$HBASE_VERSION/hbase-$HBASE_VERSION-security.tar.gz
+export HBASE_VERSION=0.97-SNAPSHOT
+#export HBASE_URL=http://www.apache.org/dist/hbase/hbase-$HBASE_VERSION/hbase-$HBASE_VERSION-security.tar.gz
+export HBASE_URL=https://s3.amazonaws.com/Ram_bucket_us-east-1/hbase-0.97-SNAPSHOT.tar.gz
+
 
 # The version of Hadoop to use and the distribution tarball location
 
+#export HADOOP_VERSION=1.0.4
+#export HADOOP_URL=http://www.apache.org/dist/hadoop/common/hadoop-$HADOOP_VERSION/hadoop-$HADOOP_VERSION-bin.tar.gz
 export HADOOP_VERSION=2.0.3-alpha
 export HADOOP_URL=http://www.apache.org/dist/hadoop/common/hadoop-$HADOOP_VERSION/hadoop-$HADOOP_VERSION.tar.gz
+
 
 ############################################################################
 # Generally, users do not need to edit below
