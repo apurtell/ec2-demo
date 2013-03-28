@@ -234,12 +234,16 @@ ln -s /usr/lib/hbase/lib/hbase-server-$HBASE_VERSION-tests.jar /usr/lib/hbase/li
 
 ln -s /usr/lib/hbase/lib/zookeeper-*.jar /usr/lib/hbase/lib/zookeeper.jar
 # replace bundled Hadoop jar with a version independent symlink
-rm -f /usr/lib/hbase/lib/hadoop-*.jar
+# There is a problem here in the Trunk version.
+# the hadoop-annotations-2.0.3-alpha.jar, hadoop-auth-2.0.3-alpha.jar, hadoop-client-2.0.3-alpha.jar
+# are not found in the lib folder of hadoop-2.0.3 tar ball. They are found only here in the lib of hbase
+# Currently not creating any symbolic ref
+#rm -f /usr/lib/hbase/lib/hadoop-*.jar
 
-ln -s /usr/lib/hadoop/share/hadoop/common/*.jar /usr/lib/hbase/lib
-ln -s /usr/lib/hadoop/share/hadoop/hdfs/*.jar /usr/lib/hbase/lib
-ln -s /usr/lib/hadoop/share/hadoop/mapreduce/*.jar /usr/lib/hbase/lib
-ln -s /usr/lib/hadoop/share/hadoop/yarn/*.jar /usr/lib/hbase/lib
+#ln -s /usr/lib/hadoop/share/hadoop/common/*.jar /usr/lib/hbase/lib
+#ln -s /usr/lib/hadoop/share/hadoop/hdfs/*.jar /usr/lib/hbase/lib
+#ln -s /usr/lib/hadoop/share/hadoop/mapreduce/*.jar /usr/lib/hbase/lib
+#ln -s /usr/lib/hadoop/share/hadoop/yarn/*.jar /usr/lib/hbase/lib
 # replace lib/native with a symlink to Hadoop native libs
 rm -rf /usr/lib/hbase/lib/native
 ln -s /usr/lib/hadoop/lib/native  /usr/lib/hbase/lib

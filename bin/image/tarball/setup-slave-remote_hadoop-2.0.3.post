@@ -6,7 +6,7 @@ service gmond start
 /usr/lib/hadoop/sbin/hadoop-daemon.sh --config /etc/hadoop/conf start datanode
 
 # Start TaskTracker
-su -s /bin/sh mapred -c "/usr/lib/hadoop/bin/hadoop-daemon.sh --config /etc/hadoop/conf start tasktracker"
+su -s /bin/sh mapred -c "/usr/lib/hadoop/sbin/hadoop-daemon.sh --config /etc/hadoop/conf start tasktracker"
 
 # Start HBase RegionServer
 su -s /bin/sh hbase -c "/usr/lib/hbase/bin/hbase-daemon.sh --config /etc/hbase/conf start regionserver"
