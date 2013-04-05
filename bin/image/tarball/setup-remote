@@ -435,6 +435,10 @@ cat > /etc/hadoop/conf/hdfs-site.xml <<EOF
  <name>dfs.block.access.token.enable</name>
  <value>true</value>
 </property>
+<property>
+    <name>dfs.block.local-path-access.user</name>
+    <value>hbase</value>
+ </property>
 
 </configuration>
 EOF
@@ -730,6 +734,16 @@ cat > /etc/hbase/conf/hbase-site.xml <<EOF
  <name>hbase.server.versionfile.writeattempts</name>
  <value>100</value>
 </property>
+<!-- short circuit param -->
+ <property>
+    <name>dfs.client.read.shortcircuit</name>
+    <value>false</value>
+ </property>
+ <!-- checksum param -->
+ <property>
+    <name>hbase.regionserver.checksum.verify</name>
+    <value>false</value>
+ </property>
 
 <!-- security settings -->
 <property>
