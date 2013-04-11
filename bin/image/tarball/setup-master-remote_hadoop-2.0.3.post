@@ -65,6 +65,10 @@ sleep 20
 su -s /bin/sh hdfs -c "kinit -k -t /etc/hadoop/conf/hdfs.keytab hdfs/$HOSTNAME ; kinit -R ;"
 su -s /bin/sh hdfs -c "/usr/lib/hadoop/bin/hadoop fs -mkdir /user ; /usr/lib/hadoop/bin/hadoop fs -mkdir /user/mapred; /usr/lib/hadoop/bin/hadoop fs -mkdir /tmp ; /usr/lib/hadoop/bin/hadoop fs -chmod 777 /tmp ; /usr/lib/hadoop/bin/hadoop fs -mkdir /mapred; /usr/lib/hadoop/bin/hadoop fs -mkdir /mapred/system; /usr/lib/hadoop/bin/hadoop fs -chown -R mapred /mapred /user/mapred ; /usr/lib/hadoop/bin/hadoop fs -mkdir /hbase ; /usr/lib/hadoop/bin/hadoop fs -chown -R hbase /hbase"
 sleep 20
+#Start datanode
+# even if one data node is not started the HMaster keeps cribbing
+/usr/lib/hadoop/sbin/hadoop-daemon.sh --config /etc/hadoop/conf start datanode
+
 # Start JobTracker
 #Comment job tracker for now.
 # Only yarn is supported in hadoop-2.0.3
@@ -76,3 +80,4 @@ sleep 25
 
 # Start the HBase master
 su -s /bin/sh hbase -c "/usr/lib/hbase/bin/hbase-daemon.sh --config /etc/hbase/conf start master"
+
