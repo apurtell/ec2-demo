@@ -53,6 +53,11 @@ cp /etc/hadoop/conf/hdfs.keytab /etc/hbase/conf/hbase.keytab
 chown hbase:hadoop /etc/hbase/conf/hbase.keytab
 chmod 640 /etc/hadoop/conf/*.keytab
 
+#set permissions to the data dir and nn dir.  This is needed incase read short circuit property
+# is enabled in hbase
+setfacl -R -m u:hbase:rwx /media/ephemeral0/dfs/data
+setfacl -R -m u:hbase:rwx /media/ephemeral1/dfs/data
+
 # Start Ganglia
 service gmond start
 service gmetad start

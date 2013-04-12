@@ -1,3 +1,8 @@
+
+#set permissions to the data dir and nn dir.  This is needed incase read short circuit property
+# is enabled in hbase
+setfacl -R -m u:hbase:rwx /media/ephemeral0/dfs/data
+setfacl -R -m u:hbase:rwx /media/ephemeral1/dfs/data
 # Start Ganglia
 service gmond start
 
