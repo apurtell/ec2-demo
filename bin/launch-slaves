@@ -68,7 +68,7 @@ echo "AMI_IMAGE: $AMI_IMAGE"
 cat "$bin"/image/tarball/setup-slave-remote.pre > /tmp/userdata$$
 echo "MASTER_HOST=$MASTER_HOST" >> /tmp/userdata$$
 cat "$bin"/image/tarball/setup-remote >> /tmp/userdata$$
-cat "$bin"/image/tarball/setup-slave-remote.post >> /tmp/userdata$$
+cat "$bin"/image/tarball/setup-slave-remote_hadoop-2.0.3.post >> /tmp/userdata$$
 gzip -9 /tmp/userdata$$
 
 if [ ! -z "$on_demand" ] ; then

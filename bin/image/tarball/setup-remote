@@ -5,6 +5,7 @@ ulimit -u 65536
 sysctl -w fs.file-max=131072
 sysctl -w vm.swappiness=0
 
+echo "Entering setup-remote file"
 HOSTNAME=`hostname --fqdn | awk '{print tolower($1)}'`
 HOST_IP=$(host $HOSTNAME | awk '{print $4}')
 export USER="root"
@@ -435,11 +436,10 @@ cat > /etc/hadoop/conf/hdfs-site.xml <<EOF
  <name>dfs.block.access.token.enable</name>
  <value>true</value>
 </property>
-<property>
-    <name>dfs.block.local-path-access.user</name>
-    <value>hbase</value>
- </property>
-
+<!--<property>
+  <name>dfs.block.local-path-access.user</name>
+  <value>hbase</value>
+</property>-->
 </configuration>
 EOF
 
@@ -630,6 +630,13 @@ export HADOOP_SECONDARYNAMENODE_OPTS=`echo "$HADOOP_NAMENODE_OPTS"
 export HADOOP_DATANODE_OPTS="-Xms1g -Xmx1g -XX:+UseConcMarkSweepGC -XX:+CMSParallelRemarkEnabled -XX:+UseParNewGC"
 EOF
 
+rm -f /usr/lib/hbase/bin/hbase
+cp /usr/lib/jprofiler_data/hbase /usr/lib/hbase/bin
+chmod 777 /usr/lib/hbase/bin/hbase
+
+sed -i "s/localhost/$HOSTNAME/g" /usr/lib/jprofiler_data/rs/config.xml
+sed -i "s/localhost/$HOSTNAME/g" /usr/lib/jprofiler_data/master/config.xml
+
 cat > /etc/hadoop/conf/hadoop-metrics.properties <<EOF
 dfs.class=org.apache.hadoop.metrics.ganglia.GangliaContext31
 dfs.period=10
@@ -734,13 +741,11 @@ cat > /etc/hbase/conf/hbase-site.xml <<EOF
  <name>hbase.server.versionfile.writeattempts</name>
  <value>100</value>
 </property>
-<!-- short circuit param -->
- <property>
+<property>
     <name>dfs.client.read.shortcircuit</name>
     <value>false</value>
- </property>
- <!-- checksum param -->
- <property>
+</property>
+<property>
     <name>hbase.regionserver.checksum.verify</name>
     <value>false</value>
  </property>
@@ -877,7 +882,8 @@ chmod 644 /etc/hbase/conf/jaas-client.conf
 cat >> /etc/hbase/conf/hbase-env.sh <<EOF
 export JAVA_HOME=/usr/java/latest
 export HBASE_MASTER_OPTS="\$HBASE_MASTER_OPTS -Xmn64m -Xms2g -Xmx2g -XX:+UseConcMarkSweepGC -XX:+CMSParallelRemarkEnabled -XX:+UseParNewGC -Djava.security.auth.login.config=/etc/hbase/conf/jaas.conf -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:/var/log/hbase/hbase-master-gc.log"
-export HBASE_REGIONSERVER_OPTS="\$HBASE_REGIONSERVER_OPTS -Xmn64m -Xms4g -Xmx4g -XX:+UseConcMarkSweepGC -XX:+CMSParallelRemarkEnabled -XX:+UseParNewGC -Djava.security.auth.login.config=/etc/hbase/conf/jaas.conf -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:/var/log/hbase/hbase-regionserver-gc.log"
+
+export HBASE_REGIONSERVER_OPTS="\$HBASE_REGIONSERVER_OPTS -Xmn64m -Xms4g -Xmx16g -XX:+UseConcMarkSweepGC -XX:+CMSParallelRemarkEnabled -XX:+UseParNewGC -Djava.security.auth.login.config=/etc/hbase/conf/jaas.conf -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:/var/log/hbase/hbase-regionserver-gc.log"
 export HBASE_ZOOKEEPER_OPTS="\$HBASE_ZOOKEEPER_OPTS -Xmn64m -Xms2g -Xmx2g -XX:+UseConcMarkSweepGC -XX:+CMSParallelRemarkEnabled -XX:+UseParNewGC -Djava.security.auth.login.config=/etc/hbase/conf/jaas.conf -Dzookeeper.kerberos.removeHostFromPrincipal=true -Dzookeeper.kerberos.removeRealmFromPrincipal=true"
 export HBASE_OPTS="\$HBASE_OPTS -Djava.security.auth.login.config=/etc/hbase/conf/jaas-client.conf"
 EOF
@@ -1012,7 +1018,6 @@ Alias /ganglia /usr/share/ganglia
   Allow from all
 </Location>
 EOF
-
 
 # XXX: Temporary fix for ZOOKEEPER-1437 until it is applied upstream
 

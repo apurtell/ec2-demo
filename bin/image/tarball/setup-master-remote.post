@@ -1,4 +1,5 @@
 # Start Ganglia
+echo "Entering post file"
 service gmond start
 service gmetad start
 apachectl start
@@ -13,7 +14,7 @@ su -s /bin/sh hdfs -c "kinit -k -t /etc/hadoop/conf/hdfs.keytab hdfs/$HOSTNAME ;
 su -s /bin/sh mapred -c "/usr/lib/hadoop/bin/hadoop-daemon.sh --config /etc/hadoop/conf start jobtracker"
 
 # Start ZooKeeper (but managed by HBase)
- su -s /bin/sh hbase -c "/usr/lib/hbase/bin/hbase-daemon.sh --config /etc/hbase/conf start zookeeper"
+su -s /bin/sh hbase -c "/usr/lib/hbase/bin/hbase-daemon.sh --config /etc/hbase/conf start zookeeper"
 sleep 10
 
 # Start the HBase master

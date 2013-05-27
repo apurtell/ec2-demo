@@ -2,7 +2,7 @@
 
 export bin="/media/ephemeral0"
 unset DISPLAY
-mv /tmp/*.sh /tmp/*.pem /tmp/create-image-remote /media/ephemeral0
+mv /tmp/*.sh /tmp/*.pem /tmp/create-image-remote /tmp/config_master.xml /tmp/config_rs.xml /tmp/hbase /media/ephemeral0
 if [ -f "$bin"/credentials.sh ] ; then
   source "$bin"/credentials.sh
 fi
@@ -50,6 +50,7 @@ if [ "$HADOOP_VERSION" = "2.0.3-alpha" ]; then
 	yum -y install jsvc
 fi
 
+
 ####################
 # Set up user accounts
 
@@ -71,6 +72,23 @@ usermod -s /bin/bash -U hbase
 usermod -s /bin/bash -U hdfs
 usermod -s /bin/bash -U mapred
 
+echo "Done with configuring user accounts"
+
+###########################
+#Install jprofiler
+
+cd /usr/lib
+wget http://download-aws.ej-technologies.com/jprofiler/jprofiler_linux_7_2_2.tar.gz
+
+tar -xvf jprofiler_linux_7_2_2.tar.gz
+mkdir /usr/lib/jprofiler_data
+mkdir /usr/lib/jprofiler_data/master
+cp /media/ephemeral0/config_master.xml /usr/lib/jprofiler_data/master/config.xml
+
+mkdir /usr/lib/jprofiler_data/rs
+cp /media/ephemeral0/config_rs.xml /usr/lib/jprofiler_data/rs/config.xml
+
+cp /media/ephemeral0/hbase /usr/lib/jprofiler_data/hbase
 ####################
 # Install Hadoop
 echo "Checking for hadoop version"
@@ -100,7 +118,6 @@ EOF
 fi
 
 ####################
-if [ "$HADOOP_VERSION" = "2.0.3-alpha" ]; then
 # Install Hadoop-2.0.3
 
 echo "Installing Hadoop $HADOOP_VERSION."
@@ -149,9 +166,9 @@ ln -s /usr/lib/hadoop/share/hadoop/yarn/hadoop-yarn-server-tests-$HADOOP_VERSION
 ln -s /usr/lib/hadoop/share/hadoop/yarn/hadoop-yarn-server-web-proxy-$HADOOP_VERSION.jar /usr/lib/hadoop/share/hadoop/yarn/hadoop-yarn-server-web-proxy.jar
 ln -s /usr/lib/hadoop/share/hadoop/yarn/hadoop-yarn-site-$HADOOP_VERSION.jar /usr/lib/hadoop/share/hadoop/yarn/hadoop-yarn-site.jar
 echo "yarn completed"
-
 # Replace the RFA to DRFA based on our log4j.properties
 sed -i s/RFA/DRFA/ /usr/lib/hadoop/sbin/hadoop-daemon.sh
+
 
 # fix task controller ownership and permissions
 find /usr/lib/hadoop/ -name task-controller -exec chown root:mapred \{} \;
@@ -160,10 +177,10 @@ cat > /etc/profile.d/hadoop.sh <<EOF
 export PATH=\$PATH:/usr/lib/hadoop/bin
 EOF
 chmod 755 /etc/profile.d/hadoop.sh
-fi
+
 ####################
-if [ "$HBASE_VERSION" = "0.94.5" ]; then
 # Install HBase
+if [ "$HBASE_VERSION" = "0.94.5" ]; then
 
 echo "Installing HBase $HBASE_VERSION."
 cd /usr/lib

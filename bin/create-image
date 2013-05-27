@@ -36,7 +36,7 @@ fi
 echo "Searching for base AMI (may take some time if on a slow network)..."
 BASE_AMI_IMAGE=`ec2-describe-images $TOOL_OPTS -a | grep $BASE_AMI_VERSION | awk '{print $2}'`
 echo "BASE_AMI_IMAGE is $BASE_AMI_IMAGE"
-
+echo "EC2-RUN ec2-run-instances $BASE_AMI_IMAGE $TOOL_OPTS -k $keypair -t $type"
 OUTPUT=`ec2-run-instances $BASE_AMI_IMAGE $TOOL_OPTS -k $keypair -t $type`
 INSTANCE=`echo $OUTPUT | awk '{print $6}'`
 echo "INSTANCE is $INSTANCE"
@@ -78,6 +78,10 @@ echo
 echo -n "Copying credentials... "
 scp $SSH_OPTS $EC2_PRIVATE_KEY "ec2-user@$HOSTNAME:/tmp/key.pem"
 scp $SSH_OPTS $EC2_CERT "ec2-user@$HOSTNAME:/tmp/cert.pem"
+scp $SSH_OPTS /home/ram/ec2-demo/config_master.xml "ec2-user@$HOSTNAME:/tmp/config_master.xml"
+scp $SSH_OPTS /home/ram/ec2-demo/config_rs.xml "ec2-user@$HOSTNAME:/tmp/config_rs.xml"
+scp $SSH_OPTS /home/ram/ec2-demo/hbase "ec2-user@$HOSTNAME:/tmp/hbase"
+
 echo
 
 # Connect to it and run the remote procedure
