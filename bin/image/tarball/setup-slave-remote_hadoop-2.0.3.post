@@ -9,8 +9,12 @@ service gmond start
 # need to do this as root
 /usr/lib/hadoop/sbin/hadoop-daemon.sh --config /etc/hadoop/conf start datanode
 
-# Start TaskTracker
-#su -s /bin/sh mapred -c "/usr/lib/hadoop/bin/hadoop-daemon.sh --config /etc/hadoop/conf start tasktracker"
+# Start Node Manager
+su -s /bin/sh mapred -c "/usr/lib/hadoop/sbin/yarn-daemon.sh --config /etc/hadoop/conf start nodemanager"
 
 # Start HBase RegionServer
-su -s /bin/sh hbase -c "/usr/lib/hbase/bin/hbase-daemon.sh --config /etc/hbase/conf start regionserver"
+#su -s /bin/sh hbase -c "/usr/lib/hbase/bin/hbase-daemon.sh --config /etc/hbase/conf start regionserver"
+
+cat >> /etc/hadoop/conf/message<<EOF
+success
+EOF
