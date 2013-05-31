@@ -879,14 +879,25 @@ chmod 644 /etc/hbase/conf/jaas-client.conf
 ####################
 # HBASE ENV
 
+
+
 cat >> /etc/hbase/conf/hbase-env.sh <<EOF
 export JAVA_HOME=/usr/java/latest
+
 export HBASE_MASTER_OPTS="\$HBASE_MASTER_OPTS -Xmn64m -Xms2g -Xmx2g -XX:+UseConcMarkSweepGC -XX:+CMSParallelRemarkEnabled -XX:+UseParNewGC -Djava.security.auth.login.config=/etc/hbase/conf/jaas.conf -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:/var/log/hbase/hbase-master-gc.log"
 
-export HBASE_REGIONSERVER_OPTS="\$HBASE_REGIONSERVER_OPTS -Xmn64m -Xms4g -Xmx16g -XX:+UseConcMarkSweepGC -XX:+CMSParallelRemarkEnabled -XX:+UseParNewGC -Djava.security.auth.login.config=/etc/hbase/conf/jaas.conf -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:/var/log/hbase/hbase-regionserver-gc.log"
 export HBASE_ZOOKEEPER_OPTS="\$HBASE_ZOOKEEPER_OPTS -Xmn64m -Xms2g -Xmx2g -XX:+UseConcMarkSweepGC -XX:+CMSParallelRemarkEnabled -XX:+UseParNewGC -Djava.security.auth.login.config=/etc/hbase/conf/jaas.conf -Dzookeeper.kerberos.removeHostFromPrincipal=true -Dzookeeper.kerberos.removeRealmFromPrincipal=true"
 export HBASE_OPTS="\$HBASE_OPTS -Djava.security.auth.login.config=/etc/hbase/conf/jaas-client.conf"
 EOF
+
+if [ "$GC" = "CMS" ]; then
+ echo export HBASE_REGIONSERVER_OPTS="\$HBASE_REGIONSERVER_OPTS $MEMORY -XX:+UseConcMarkSweepGC -XX:+CMSParallelRemarkEnabled -XX:+UseParNewGC -Djava.security.auth.login.config=/etc/hbase/conf/jaas.conf -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:/var/log/hbase/hbase-regionserver-gc.log" >> /etc/hbase/conf/hbase-env.sh
+fi
+
+if [ "$GC" = "G1GC" ]; then
+ echo export HBASE_REGIONSERVER_OPTS="\$HBASE_REGIONSERVER_OPTS $MEMORY -XX:+UseG1GC -XX:+G1ParallelRSetUpdatingEnabled -XX:+G1ParallelRSetScanningEnabled -XX:NewRatio=1 -Djava.security.auth.login.config=/etc/hbase/conf/jaas.conf -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:/var/log/hbase/hbase-regionserver-gc.log" >> /etc/hbase/conf/hbase-env.sh
+fi
+
 
 ln -s /etc/hadoop/conf/core-site.xml /etc/hbase/conf
 ln -s /etc/hadoop/conf/hdfs-site.xml /etc/hbase/conf
