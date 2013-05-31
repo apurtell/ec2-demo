@@ -1,0 +1,16 @@
+#script to start the master and regionserver remotely
+
+# start the hmaster in the master node
+cat /tmp/ec2-master | while read MASTER
+do
+ echo -n "Master : $MASTER"
+ ssh -n $SSH_OPTS "ec2-user@$MASTER" "su -s /bin/sh hbase -c "/usr/lib/hbase/bin/hbase-daemon.sh --config /etc/hbase/conf start master""
+done
+#wait for sometime and then start
+sleep 25
+# start the regionserver in the slave nodes
+cat /tmp/ec2-slaves | while read SLAVE
+do
+ echo -n "Slave : $SLAVE"
+ ssh -n $SSH_OPTS "ec2-user@$SLAVE" "su -s /bin/sh hbase -c "/usr/lib/hbase/bin/hbase-daemon.sh --config /etc/hbase/conf start regionserver""
+done

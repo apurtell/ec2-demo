@@ -1,0 +1,59 @@
+#!/bin/bash
+if [ $# -gt 0 ] ; then
+  ami=$1
+  shift
+else
+  echo "usage: restore-data <ami> <accesskey> <secretkey>" && exit 1
+fi
+if [ $# -gt 0 ] ; then
+  accesskey=$1
+  shift
+else
+  echo "usage: restore-data <ami> <accesskey> <secretkey>" && exit 1
+fi
+if [ $# -gt 0 ] ; then
+  secretkey=$1
+  shift
+else
+  echo "usage: restore-data <ami> <accesskey> <secretkey>" && exit 1
+fi
+
+bin=`dirname "$0"`
+bin=`cd "$bin"; pwd`
+export bin
+if [ -f "$bin"/credentials.sh ] ; then
+  source "$bin"/credentials.sh
+fi
+source "$bin"/env.sh
+MASTER=`cat /tmp/ec2-master`
+echo -n "Polling master,$MASTER, process status "
+while true; do
+printf "."
+msg=`ssh $SSH_OPTS "ec2-user@$MASTER" "cat /etc/hadoop/conf/message"`
+if [ $msg == success ] ; then
+  echo
+  echo "All processes are up in master"
+  break;
+fi
+sleep 5
+done
+echo "Polling slave processes status"
+rm -f /tmp/ec2-slaves
+ec2-describe-instances $TOOL_OPTS --filter instance-lifecycle=spot --filter image-id=$ami | grep running | awk '{print $4}'>>/tmp/ec2-slaves
+cat /tmp/ec2-slaves | while read SLAVE
+do
+  echo -n "Slave : $SLAVE"
+  while true; do
+    printf "."
+    msg=`ssh -n $SSH_OPTS "ec2-user@$SLAVE" "cat /etc/hadoop/conf/message"`
+    if [ $msg == success ] ; then
+      echo
+      echo "All processes are up in slave $SLAVE"
+      break
+    fi
+    sleep 5
+  done
+done
+
+echo "Going to copy data from S3"
+ssh  $SSH_OPTS "ec2-user@$MASTER" "/usr/lib/hadoop/bin/hadoop distcp -conf /etc/hadoop/conf/mapred-site.xml s3://$accesskey:$secretkey@intel-hbase-backup/hbase \ hdfs://$MASTER:8020/hbase "
