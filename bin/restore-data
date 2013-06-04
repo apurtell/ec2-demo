@@ -1,22 +1,47 @@
 #!/bin/bash
+ami=
+while [ $# -gt 0 ] ; do
+  case "$1" in
+    --ami)             ami="$2"; shift;;
+    --)                shift; break;;
+    -*)                shift;;
+    *)                 break;;
+  esac
+  shift
+done
+
 if [ $# -gt 0 ] ; then
-  ami=$1
+  s3bucket=$1
   shift
 else
-  echo "usage: restore-data <ami> <accesskey> <secretkey>" && exit 1
+  echo "usage: restore-data <s3bucket> <accesskey> <secretkey>" && exit 1
 fi
 if [ $# -gt 0 ] ; then
   accesskey=$1
   shift
 else
-  echo "usage: restore-data <ami> <accesskey> <secretkey>" && exit 1
+  echo "usage: restore-data <s3bucket> <accesskey> <secretkey>" && exit 1
 fi
 if [ $# -gt 0 ] ; then
   secretkey=$1
   shift
 else
-  echo "usage: restore-data <ami> <accesskey> <secretkey>" && exit 1
+  echo "usage: restore-data <s3bucket> <accesskey> <secretkey>" && exit 1
 fi
+
+echo "IMAGE_VERSION: $IMAGE_VERSION"
+
+if [ -z $ami ] ; then
+  echo "Searching for AMI for $IMAGE_VERSION (may take some time if on a slow network)..."
+  CMD="ec2-describe-images $TOOL_OPTS -a | grep $S3_ACCOUNT | grep $IMAGE_VERSION | grep available | awk '{print $2}'"
+  echo $CMD
+  AMI_IMAGE=`ec2-describe-images $TOOL_OPTS -a | grep $S3_ACCOUNT | grep $IMAGE_VERSION | grep available | awk '{print $2}'`
+else
+  AMI_IMAGE=$ami
+fi
+echo "AMI_IMAGE: $AMI_IMAGE"
+
+[ -z $AMI_IMAGE ] && echo "No AMI found" && exit 1
 
 bin=`dirname "$0"`
 bin=`cd "$bin"; pwd`
@@ -39,7 +64,7 @@ sleep 5
 done
 echo "Polling slave processes status"
 rm -f /tmp/ec2-slaves
-ec2-describe-instances $TOOL_OPTS --filter instance-lifecycle=spot --filter image-id=$ami | grep running | awk '{print $4}'>>/tmp/ec2-slaves
+ec2-describe-instances $TOOL_OPTS --filter instance-lifecycle=spot --filter image-id=$AMI_IMAGE | grep running | awk '{print $4}'>>/tmp/ec2-slaves
 cat /tmp/ec2-slaves | while read SLAVE
 do
   echo -n "Slave : $SLAVE"
@@ -56,4 +81,4 @@ do
 done
 
 echo "Going to copy data from S3"
-ssh  $SSH_OPTS "ec2-user@$MASTER" "/usr/lib/hadoop/bin/hadoop distcp -conf /etc/hadoop/conf/mapred-site.xml s3://$accesskey:$secretkey@intel-hbase-backup/hbase \ hdfs://$MASTER:8020/hbase "
+ssh  $SSH_OPTS "ec2-user@$MASTER" "/usr/lib/hadoop/bin/hadoop distcp -conf /etc/hadoop/conf/mapred-site.xml s3://$accesskey:$secretkey@$s3bucket/hbase \ hdfs://$MASTER:8020/hbase "
