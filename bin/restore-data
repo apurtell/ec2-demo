@@ -29,6 +29,13 @@ else
   echo "usage: restore-data <s3bucket> <accesskey> <secretkey>" && exit 1
 fi
 
+bin=`dirname "$0"`
+bin=`cd "$bin"; pwd`
+export bin
+if [ -f "$bin"/credentials.sh ] ; then
+  source "$bin"/credentials.sh
+fi
+source "$bin"/env.sh
 echo "IMAGE_VERSION: $IMAGE_VERSION"
 
 if [ -z $ami ] ; then
@@ -40,21 +47,13 @@ else
   AMI_IMAGE=$ami
 fi
 echo "AMI_IMAGE: $AMI_IMAGE"
-
 [ -z $AMI_IMAGE ] && echo "No AMI found" && exit 1
 
-bin=`dirname "$0"`
-bin=`cd "$bin"; pwd`
-export bin
-if [ -f "$bin"/credentials.sh ] ; then
-  source "$bin"/credentials.sh
-fi
-source "$bin"/env.sh
 MASTER=`cat /tmp/ec2-master`
 echo -n "Polling master,$MASTER, process status "
 while true; do
 printf "."
-msg=`ssh $SSH_OPTS "ec2-user@$MASTER" "cat /etc/hadoop/conf/message"`
+msg=`ssh -n $SSH_OPTS "ec2-user@$MASTER" "cat /etc/hadoop/conf/message"`
 if [ $msg == success ] ; then
   echo
   echo "All processes are up in master"
@@ -62,6 +61,7 @@ if [ $msg == success ] ; then
 fi
 sleep 5
 done
+
 echo "Polling slave processes status"
 rm -f /tmp/ec2-slaves
 ec2-describe-instances $TOOL_OPTS --filter instance-lifecycle=spot --filter image-id=$AMI_IMAGE | grep running | awk '{print $4}'>>/tmp/ec2-slaves
@@ -80,5 +80,5 @@ do
   done
 done
 
-echo "Going to copy data from S3"
+echo "Going to copy data from S3 $s3bucket/hbase"
 ssh  $SSH_OPTS "ec2-user@$MASTER" "/usr/lib/hadoop/bin/hadoop distcp -conf /etc/hadoop/conf/mapred-site.xml s3://$accesskey:$secretkey@$s3bucket/hbase \ hdfs://$MASTER:8020/hbase "
