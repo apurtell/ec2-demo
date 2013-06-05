@@ -168,6 +168,7 @@ ln -s /usr/lib/hadoop/share/hadoop/yarn/hadoop-yarn-site-$HADOOP_VERSION.jar /us
 echo "yarn completed"
 # Replace the RFA to DRFA based on our log4j.properties
 sed -i s/RFA/DRFA/ /usr/lib/hadoop/sbin/hadoop-daemon.sh
+sed -i s/RFA/DRFA/ /usr/lib/hadoop/sbin/yarn-daemon.sh
 
 
 # fix task controller ownership and permissions

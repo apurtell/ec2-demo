@@ -451,8 +451,12 @@ cat > /etc/hadoop/conf/mapred-site.xml <<EOF
 <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
 <configuration>
 <property>
- <name>mapred.job.tracker</name>
- <value>$MASTER_HOST:8030</value>
+ <name>yarn.resourcemanager.address</name>
+ <value>$MASTER_HOST:9030</value>
+</property>
+<property>
+  <name>yarn.resourcemanager.resource-tracker.address</name>
+  <value>$MASTER_HOST:8031</value>
 </property>
 <property>
  <name>mapred.job.tracker.http.address</name>
@@ -463,7 +467,7 @@ cat > /etc/hadoop/conf/mapred-site.xml <<EOF
  <value>0.0.0.0:8050</value>
 </property>
 <property>
- <name>mapred.local.dir</name>
+ <name>yarn.nodemanager.local-dirs</name>
  <value>$MAPRED_LOCAL_DIR</value>
 </property>
 <property>
@@ -505,31 +509,23 @@ cat > /etc/hadoop/conf/mapred-site.xml <<EOF
 
 <!-- security settings -->
 <property>
- <name>mapreduce.jobtracker.keytab.file</name>
+ <name>yarn.resourcemanager.keytab</name>
  <value>/etc/hadoop/conf/mapred.keytab</value>
 </property>	
 <property>
- <name>mapreduce.jobtracker.kerberos.principal</name>
+ <name>yarn.resourcemanager.principal</name>
  <value>mapred/_HOST@HADOOP.LOCALDOMAIN</value>
 </property>
 <property>
- <name>mapreduce.jobtracker.kerberos.https.principal</name>
- <value>host/_HOST@HADOOP.LOCALDOMAIN</value>
-</property>
-<property>
- <name>mapreduce.tasktracker.keytab.file</name>
+ <name>yarn.nodemanager.keytab</name>
  <value>/etc/hadoop/conf/mapred.keytab</value>
 </property>	
 <property>
- <name>mapreduce.tasktracker.kerberos.principal</name>
+ <name>yarn.nodemanager.principal</name>
  <value>mapred/_HOST@HADOOP.LOCALDOMAIN</value>
 </property>
 <property>
- <name>mapreduce.tasktracker.kerberos.https.principal</name>
- <value>host/_HOST@HADOOP.LOCALDOMAIN</value>
-</property>
-<property>
- <name>mapred.acls.enabled</name>
+ <name>yarn.acl.enable</name>
  <value>true</value>
 </property>
 <property>
@@ -554,7 +550,6 @@ cat > /etc/hadoop/conf/mapred-site.xml <<EOF
 </property>
 
 </configuration>
-EOF
 
 ####################
 # MAPRED QUEUE ACLS
