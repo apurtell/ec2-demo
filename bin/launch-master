@@ -5,8 +5,8 @@ secgroup=default
 monitoring=
 zone=
 ami=
-keypair=root
 security=
+keypair=root
 
 while [ $# -gt 0 ] ; do
   case "$1" in

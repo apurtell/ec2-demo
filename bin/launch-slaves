@@ -8,8 +8,8 @@ price=0.5
 zone=
 ami=
 on_demand=
-keypair=root
 security=
+keypair=root
 
 while [ $# -gt 0 ] ; do
   case "$1" in

@@ -3,6 +3,9 @@
 bin=`dirname "$0"`
 bin=`cd "$bin"; pwd`
 export bin
+if [ -f "$bin"/credentials.sh ] ; then
+  source "$bin"/credentials.sh
+fi
 source "$bin"/env.sh
 
 # start the hmaster in the master node
