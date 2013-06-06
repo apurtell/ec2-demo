@@ -1037,9 +1037,3 @@ ln -s zookeeper-*.jar zookeeper.jar
 yum -y install patch
 cd /usr/lib/hbase/bin
 wget -O - http://tm-files-west.s3.amazonaws.com/hbase/hbase-bin.patch | patch
-
-##########
-# Change sudoers. Allow sudo to be executed from SSH
-cat >> /etc/sudoers <<EOF
-Defaults:ec2-user !requiretty
-EOF
