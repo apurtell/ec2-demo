@@ -1,5 +1,16 @@
 #!/bin/bash
 #script to start the master and regionserver remotely
+ami=
+while [ $# -gt 0 ] ; do
+  case "$1" in
+    --ami)             ami="$2"; shift;;
+    --)                shift; break;;
+    -*)                shift;;
+    *)                 break;;
+  esac
+  shift
+done
+
 bin=`dirname "$0"`
 bin=`cd "$bin"; pwd`
 export bin
@@ -7,6 +18,17 @@ if [ -f "$bin"/credentials.sh ] ; then
   source "$bin"/credentials.sh
 fi
 source "$bin"/env.sh
+
+if [ -z $ami ] ; then
+  echo "Searching for AMI for $IMAGE_VERSION (may take some time if on a slow network)..."
+  CMD="ec2-describe-images $TOOL_OPTS -a | grep $S3_ACCOUNT | grep $IMAGE_VERSION | grep available | awk '{print $2}'"
+  echo $CMD
+  AMI_IMAGE=`ec2-describe-images $TOOL_OPTS -a | grep $S3_ACCOUNT | grep $IMAGE_VERSION | grep available | awk '{print $2}'`
+else
+  AMI_IMAGE=$ami
+fi
+echo "AMI_IMAGE: $AMI_IMAGE"
+[ -z $AMI_IMAGE ] && echo "No AMI found" && exit 1
 
 # start the HMaster in the master node
 cat /tmp/ec2-master | while read MASTER
@@ -17,14 +39,13 @@ do
  sleep 2
  ssh -n $SSH_OPTS "ec2-user@$MASTER" "sudo /usr/lib/hbase/bin/hbase-daemon.sh --config /etc/hbase/conf start master"
 done
-#wait for sometime and then start RS
-echo "Will start RS in all slave nodes in some time"
-sleep 5
+
 echo "Starting RS in all slave nodes"
 
 # start the regionserver in the slave nodes
+ec2-describe-instances $TOOL_OPTS --filter instance-lifecycle=spot --filter image-id=$AMI_IMAGE | grep running | awk '{print $4}'>/tmp/ec2-slaves
 cat /tmp/ec2-slaves | while read SLAVE
 do
- #echo "Starting HBase RS at Slave : $SLAVE"
- ssh -n $SSH_OPTS "ec2-user@$MASTER" "sudo /usr/lib/hbase/bin/hbase-daemon.sh --config /etc/hbase/conf start regionserver"
+ echo "Starting HBase RS at Slave : $SLAVE"
+ ssh -n $SSH_OPTS "ec2-user@$SLAVE" "sudo /usr/lib/hbase/bin/hbase-daemon.sh --config /etc/hbase/conf start regionserver"
 done
