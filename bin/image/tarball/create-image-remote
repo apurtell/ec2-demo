@@ -281,6 +281,9 @@ fi
 
 echo "Configuring system"
 
+# We have to run sudo commands over SSH. Disabling requiretty in /etc/sudoers
+sed -i s/requiretty/!requiretty/ /etc/sudoers
+
 echo "@hadoop soft nofile 65536" >> /etc/security/limits.conf
 echo "@hadoop hard nofile 65536" >> /etc/security/limits.conf
 echo "@hadoop soft nproc 65536" >> /etc/security/limits.conf
