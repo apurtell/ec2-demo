@@ -81,11 +81,10 @@ cd /usr/lib
 wget http://download-aws.ej-technologies.com/jprofiler/jprofiler_linux_7_2_2.tar.gz
 
 tar -xvf jprofiler_linux_7_2_2.tar.gz
-mkdir /usr/lib/jprofiler_data
-mkdir /usr/lib/jprofiler_data/master
+mkdir -p /usr/lib/jprofiler_data/master
 cp /media/ephemeral0/config_master.xml /usr/lib/jprofiler_data/master/config.xml
 
-mkdir /usr/lib/jprofiler_data/rs
+mkdir -p /usr/lib/jprofiler_data/rs
 cp /media/ephemeral0/config_rs.xml /usr/lib/jprofiler_data/rs/config.xml
 
 cp /media/ephemeral0/hbase /usr/lib/jprofiler_data/hbase
@@ -293,33 +292,7 @@ echo "vm.swappiness = 0" >> /etc/sysctl.conf
 
 [ ! -f /etc/hosts ] &&  echo "127.0.0.1 localhost" > /etc/hosts
 
-# helper wrapper for init
-cat > /usr/bin/klogin <<EOF
-#!/bin/bash
-user=\$1
-host=\`hostname -f\`
-if [ -z "\$user" ] ; then
-  user=\`whoami\`
-fi
-case \$user in
-  hdfs|mapred|hadoop)
-    kinit -k -t /etc/hadoop/conf/\$user.keytab \$user/\$host && kinit -R
-    ;;
-  hbase)
-    kinit -k -t /etc/hbase/conf/\$user.keytab \$user/\$host && kinit -R
-    ;;
-  *)
-    echo "No keytab for user \$user"
-    ;;
-esac
-EOF
-chmod 755 /usr/bin/klogin
-
 yum -y clean all
-
-for i in httpd gmetad gmond kadmin krb5kdc yum-updatesd ; do
-  chkconfig --levels 0123456 $i off
-done
 
 rm -f /etc/zookeeper/zoo.cfg
 

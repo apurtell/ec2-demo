@@ -11,138 +11,6 @@ HOST_IP=$(host $HOSTNAME | awk '{print $4}')
 export USER="root"
 echo "$HOST_IP $HOSTNAME" >> /etc/hosts
 
-# Configure Kerberos
-
-if [ "$IS_MASTER" = "true" ]; then
-
-####################
-# KDC.CONF
-#
-
-  cat > /var/kerberos/krb5kdc/kdc.conf <<EOF
-[kdcdefaults]
-  v4_mode = nopreauth
-  kdc_ports = 0
-  kdc_tcp_ports = 88
-[realms]
-  HADOOP.LOCALDOMAIN = {
-    master_key_type = des3-hmac-sha1
-    acl_file = /var/kerberos/krb5kdc/kadm5.acl
-    dict_file = /usr/share/dict/words
-    admin_keytab = /var/kerberos/krb5kdc/kadm5.keytab
-    supported_enctypes = des-cbc-md5:normal des-cbc-crc:normal des:normal des:v4 des:norealm des:onlyrealm
-    max_life = 1d 0h 0m 0s
-    max_renewable_life = 7d 0h 0m 0s
-  }
-EOF
-
-####################
-# KADM5 ACL
-
-  cat > /var/kerberos/krb5kdc/kadm5.acl <<EOF
-*/admin@HADOOP.LOCALDOMAIN    *
-EOF
-
-fi
-
-####################
-# KRB5 CONF
-
-cat > /etc/krb5.conf <<EOF
-[logging]
-  default = FILE:/var/log/krb5libs.log
-  kdc = FILE:/var/log/krb5kdc.log
-  admin_server = FILE:/var/log/kadmind.log
-[libdefaults]
-  default_realm = HADOOP.LOCALDOMAIN
-  dns_lookup_realm = false
-  dns_lookup_kdc = false
-  ticket_lifetime = 1d
-  renew_lifetime = 7d
-  forwardable = yes
-  proxiable = yes
-  udp_preference_limit = 1
-  extra_addresses = 127.0.0.1
-  kdc_timesync = 1
-  ccache_type = 4
-  allow_weak_crypto = true
-[realms]
-  HADOOP.LOCALDOMAIN = {
-    kdc = ${MASTER_HOST}:88
-    admin_server = ${MASTER_HOST}:749
-  }
-[domain_realm]
-  localhost = HADOOP.LOCALDOMAIN
-  .compute-1.internal = HADOOP.LOCALDOMAIN
-  .internal = HADOOP.LOCALDOMAIN
-  internal = HADOOP.LOCALDOMAIN
-[appdefaults]
-  pam = {
-    debug = false
-    ticket_lifetime = 36000
-    renew_lifetime = 36000
-    forwardable = true
-    krb4_convert = false
-  }
-[login]
-  krb4_convert = true
-  krb4_get_tickets = false
-EOF
-
-    kdc_setup() {
-      kmasterpass=$1
-      kadmpass=$2
-      kdb5_util create -s -P ${kmasterpass}
-      service krb5kdc start
-      service kadmin start
-      kadmin.local <<EOF 
-        add_principal -pw $kadmpass kadmin/admin
-        add_principal -pw $kadmpass hadoop/admin
-        add_principal -pw $kadmpass hdfs
-        add_principal -pw $kadmpass mapred
-        add_principal -pw $kadmpass hbase
-        quit
-EOF
-}
-
-    add_client() {
-      user=$1
-      pass=$2
-      kt=$3
-      host=$4
-      kadmin -p $user -w $pass <<EOF 
-        add_principal -randkey host/$host
-        add_principal -randkey hadoop/$host
-        add_principal -randkey hdfs/$host
-        add_principal -randkey mapred/$host
-        add_principal -randkey hbase/$host
-        add_principal -randkey zookeeper/$host
-        ktadd -k $kt host/$host
-        ktadd -k $kt hadoop/$host
-        ktadd -k $kt hdfs/$host
-        ktadd -k $kt mapred/$host
-        ktadd -k $kt hbase/$host
-        ktadd -k $kt zookeeper/$host
-        quit
-EOF
-     }
-
-KDC_MASTER_PASS="EiSei0Da"
-KDC_ADMIN_PASS="Chohpet6"
-if [ "$IS_MASTER" = "true" ]; then
-  kdc_setup $KDC_MASTER_PASS $KDC_ADMIN_PASS
-  echo "Waiting 10 seconds for KDC"
-  sleep 10
-fi
-mkdir -p /etc/hadoop/conf /etc/hbase/conf
-add_client "hadoop/admin" $KDC_ADMIN_PASS /etc/hadoop/conf/hdfs.keytab $HOSTNAME
-chown hdfs:hadoop /etc/hadoop/conf/hdfs.keytab
-cp /etc/hadoop/conf/hdfs.keytab /etc/hadoop/conf/mapred.keytab
-chown mapred:hadoop /etc/hadoop/conf/mapred.keytab
-cp /etc/hadoop/conf/hdfs.keytab /etc/hbase/conf/hbase.keytab
-chown hbase:hadoop /etc/hbase/conf/hbase.keytab
-chmod 640 /etc/hadoop/conf/*.keytab
-
 # Set up local directories for HDFS and MapReduce
 
 umount /dev/xvdb
@@ -195,7 +63,6 @@ DFS_NAMESECONDARY_DIR=`echo $DFS_NAME_DIR | sed -e 's/name/namesecondary/'`
 
 # Set up Hadoop configuration
 
-kinit=`which kinit`
 
 # retarget logs to /media/ephemeral0
 rm -rf /var/log/hadoop*
@@ -220,13 +87,6 @@ ln -s /etc/hadoop/conf /usr/lib/hadoop/conf
 
 cat >> /etc/hadoop/conf/hadoop-env.sh <<EOF
 export JAVA_HOME=/usr/java/latest
-export HADOOP_OPTS="\$HADOOP_OPTS -Djavax.security.auth.useSubjectCredsOnly=false"
-export HADOOP_NAMENODE_USER=hdfs
-export HADOOP_SECONDARYNAMENODE_USER=hdfs
-export HADOOP_DATANODE_USER=hdfs
-export HADOOP_SECURE_DN_USER=hdfs
-export HADOOP_JOBTRACKER_USER=mapred
-export HADOOP_TASKTRACKER_USER=mapred
 export JSVC_HOME=/usr/bin/
 EOF
 
@@ -436,8 +296,6 @@ cat > /etc/hadoop/conf/mapred-site.xml <<EOF
  <name>mapred.fairscheduler.allocation.file</name>
  <value>/etc/hadoop/conf/fair-scheduler.xml</value>
 </property>
-
-
 
 </configuration>
 EOF
@@ -716,63 +574,6 @@ cat > /etc/hbase/conf/hbase-site.xml <<EOF
 EOF
 
 ####################
-# IPC PROTOCOL ACLS
-
-cat > /etc/hbase/conf/hadoop-policy.xml <<EOF
-<?xml version="1.0"?>
-<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
-<configuration>
-<property>
- <name>security.client.protocol.acl</name>
- <value>*</value>
-</property>
-<property>
- <name>security.admin.protocol.acl</name>
- <value>*</value>
-</property>
-<property>
- <name>security.masterregion.protocol.acl</name>
- <value>*</value>
-</property>
-</configuration>
-EOF
-
-####################
-# JAAS CONF (SERVER)
-
-cat > /etc/hbase/conf/jaas.conf <<EOF
-Server {
-  com.sun.security.auth.module.Krb5LoginModule required
-  useKeyTab=true
-  keyTab="/etc/hbase/conf/hbase.keytab"
-  storeKey=true
-  useTicketCache=false
-  principal="zookeeper/$HOSTNAME";
-};
-Client {
-  com.sun.security.auth.module.Krb5LoginModule required
-  useKeyTab=true
-  useTicketCache=false
-  keyTab="/etc/hbase/conf/hbase.keytab"
-  principal="hbase/$HOSTNAME";
-};
-EOF
-
-####################
-# JAAS CONF (CLIENT)
-
-cat > /etc/hbase/conf/jaas-client.conf <<EOF
-Client {
-  com.sun.security.auth.module.Krb5LoginModule required
-  useKeyTab=false
-  useTicketCache=true
-  doNotPrompt=true
-  renewTGT=true;
-};
-EOF
-chmod 644 /etc/hbase/conf/jaas-client.conf
-
-####################
 # HBASE ENV
 
 cat >> /etc/hbase/conf/hbase-env.sh <<EOF
@@ -887,6 +688,8 @@ log4j.logger.org.apache.hadoop.hbase.zookeeper.ZooKeeperWatcher=INFO
 # log4j.logger.org.apache.hadoop.hbase.client.MetaScanner=INFO
 EOF
 
+####################################
+#hadoop-metrics.properties
 cat > /etc/hbase/conf/hadoop-metrics.properties <<EOF
 dfs.class=org.apache.hadoop.metrics.ganglia.GangliaContext31
 dfs.period=10
@@ -899,6 +702,7 @@ jvm.period=10
 jvm.servers=$MASTER_HOST:8649
 EOF
 
+#######################
 # Configure Ganglia
 
 sed -i -e "s|\( *mcast_join *=.*\)|#\1|" \

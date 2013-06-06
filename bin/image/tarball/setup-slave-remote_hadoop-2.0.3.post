@@ -6,15 +6,15 @@ setfacl -R -m u:hbase:rwx /media/ephemeral1/dfs/data
 service gmond start
 
 # Start DataNode
-# need to do this as root
 /usr/lib/hadoop/sbin/hadoop-daemon.sh --config /etc/hadoop/conf start datanode
 
 # Start Node Manager
-su -s /bin/sh mapred -c "/usr/lib/hadoop/sbin/yarn-daemon.sh --config /etc/hadoop/conf start nodemanager"
+/usr/lib/hadoop/sbin/yarn-daemon.sh --config /etc/hadoop/conf start nodemanager
 
-# Start HBase RegionServer
-#su -s /bin/sh hbase -c "/usr/lib/hbase/bin/hbase-daemon.sh --config /etc/hbase/conf start regionserver"
+sleep 5
 
+# Writing a message to a file once startup is over. We will read this file remotely while starting HBase cluster
+# TODO Read this message is not enough. We need to do JPS and check for all processes presence. Now the DN is displayed with out any name in JPS!
 cat >> /etc/hadoop/conf/message<<EOF
 success
 EOF

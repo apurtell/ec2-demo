@@ -8,20 +8,23 @@ if [ -f "$bin"/credentials.sh ] ; then
 fi
 source "$bin"/env.sh
 
-# start the hmaster in the master node
+# start the HMaster in the master node
 cat /tmp/ec2-master | while read MASTER
 do
  echo "Starting HBase Master at $MASTER"
  # Start ZooKeeper (but managed by HBase)
- ssh -n $SSH_OPTS "ec2-user@$MASTER" "su -s /bin/sh hbase -c '/usr/lib/hbase/bin/hbase-daemon.sh --config /etc/hbase/conf start zookeeper'"
- sleep 5
- ssh -n $SSH_OPTS "ec2-user@$MASTER" "su -s /bin/sh hbase -c '/usr/lib/hbase/bin/hbase-daemon.sh --config /etc/hbase/conf start master'"
+ ssh -n $SSH_OPTS "ec2-user@$MASTER" "sudo /usr/lib/hbase/bin/hbase-daemon.sh --config /etc/hbase/conf start zookeeper"
+ sleep 2
+ ssh -n $SSH_OPTS "ec2-user@$MASTER" "sudo /usr/lib/hbase/bin/hbase-daemon.sh --config /etc/hbase/conf start master"
 done
-#wait for sometime and then start
-sleep 25
+#wait for sometime and then start RS
+echo "Will start RS in all slave nodes in some time"
+sleep 5
+echo "Starting RS in all slave nodes"
+
 # start the regionserver in the slave nodes
 cat /tmp/ec2-slaves | while read SLAVE
 do
- echo "Starting HBase RS at Slave : $SLAVE"
- ssh -n $SSH_OPTS "ec2-user@$SLAVE" "su -s /bin/sh hbase -c '/usr/lib/hbase/bin/hbase-daemon.sh --config /etc/hbase/conf start regionserver'"
+ #echo "Starting HBase RS at Slave : $SLAVE"
+ ssh -n $SSH_OPTS "ec2-user@$MASTER" "sudo /usr/lib/hbase/bin/hbase-daemon.sh --config /etc/hbase/conf start regionserver"
 done

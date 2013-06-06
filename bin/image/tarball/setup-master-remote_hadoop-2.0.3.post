@@ -1,58 +1,3 @@
-kdc_setup() {
-      kmasterpass=$1
-      kadmpass=$2
-      kdb5_util create -s -P ${kmasterpass}
-      service krb5kdc start
-      service kadmin start
-      kadmin.local <<EOF 
-        add_principal -pw $kadmpass kadmin/admin
-        add_principal -pw $kadmpass hadoop/admin
-        add_principal -pw $kadmpass hdfs
-        add_principal -pw $kadmpass mapred
-        add_principal -pw $kadmpass hbase
-        quit
-EOF
-}
-
-    add_client() {
-      user=$1
-      pass=$2
-      kt=$3
-      host=$4
-      kadmin -p $user -w $pass <<EOF 
-        add_principal -randkey host/$host
-        add_principal -randkey hadoop/$host
-        add_principal -randkey hdfs/$host
-        add_principal -randkey mapred/$host
-        add_principal -randkey hbase/$host
-        add_principal -randkey zookeeper/$host
-        ktadd -k $kt host/$host
-        ktadd -k $kt hadoop/$host
-        ktadd -k $kt hdfs/$host
-        ktadd -k $kt mapred/$host
-        ktadd -k $kt hbase/$host
-        ktadd -k $kt zookeeper/$host
-        quit
-EOF
-     }
-#Complete kerberos installation
-KDC_MASTER_PASS="EiSei0Da"
-KDC_ADMIN_PASS="Chohpet6"
-HOSTNAME=`hostname --fqdn | awk '{print tolower($1)}'`
-if [ "$1" = "true" ]; then
-  kdc_setup $KDC_MASTER_PASS $KDC_ADMIN_PASS
-  echo "Waiting 10 seconds for KDC"
-  sleep 10
-fi
-mkdir -p /etc/hadoop/conf /etc/hbase/conf
-add_client "hadoop/admin" $KDC_ADMIN_PASS /etc/hadoop/conf/hdfs.keytab $HOSTNAME
-chown hdfs:hadoop /etc/hadoop/conf/hdfs.keytab
-cp /etc/hadoop/conf/hdfs.keytab /etc/hadoop/conf/mapred.keytab
-chown mapred:hadoop /etc/hadoop/conf/mapred.keytab
-cp /etc/hadoop/conf/hdfs.keytab /etc/hbase/conf/hbase.keytab
-chown hbase:hadoop /etc/hbase/conf/hbase.keytab
-chmod 640 /etc/hadoop/conf/*.keytab
-
 #set permissions to the data dir and nn dir.  This is needed incase read short circuit property
 # is enabled in hbase
 setfacl -R -m u:hbase:rwx /media/ephemeral0/dfs/data
@@ -64,32 +9,17 @@ service gmetad start
 apachectl start
 
 # Start NameNode
-su -s /bin/sh hdfs -c "/usr/lib/hadoop/bin/hdfs namenode -format -force && /usr/lib/hadoop/sbin/hadoop-daemon.sh --config /etc/hadoop/conf start namenode"
-sleep 20
-# Set permissions
-su -s /bin/sh hdfs -c "kinit -k -t /etc/hadoop/conf/hdfs.keytab hdfs/$HOSTNAME ; kinit -R ;"
-su -s /bin/sh hdfs -c "/usr/lib/hadoop/bin/hadoop fs -mkdir /user ; /usr/lib/hadoop/bin/hadoop fs -mkdir /user/mapred; /usr/lib/hadoop/bin/hadoop fs -mkdir /tmp ; /usr/lib/hadoop/bin/hadoop fs -chmod 777 /tmp ; /usr/lib/hadoop/bin/hadoop fs -mkdir /mapred; /usr/lib/hadoop/bin/hadoop fs -mkdir /mapred/system; /usr/lib/hadoop/bin/hadoop fs -chown -R mapred /mapred /user/mapred ; /usr/lib/hadoop/bin/hadoop fs -mkdir /hbase ; /usr/lib/hadoop/bin/hadoop fs -chown -R hbase /hbase"
-sleep 20
-#Start datanode
-# even if one data node is not started the HMaster keeps cribbing
-/usr/lib/hadoop/sbin/hadoop-daemon.sh --config /etc/hadoop/conf start datanode
+/usr/lib/hadoop/bin/hdfs namenode -format -force
+/usr/lib/hadoop/sbin/hadoop-daemon.sh --config /etc/hadoop/conf start namenode
+sleep 5
 
 # Start Resource Manager
-su -s /bin/sh mapred -c "kinit -k -t /etc/hadoop/conf/mapred.keytab mapred/$HOSTNAME ; kinit -R ;"
-su -s /bin/sh mapred -c "/usr/lib/hadoop/sbin/yarn-daemon.sh --config /etc/hadoop/conf start resourcemanager"
+/usr/lib/hadoop/sbin/yarn-daemon.sh --config /etc/hadoop/conf start resourcemanager
 
-sleep 20
+sleep 5
 
-# Start Node Manager
-su -s /bin/sh mapred -c "/usr/lib/hadoop/sbin/yarn-daemon.sh --config /etc/hadoop/conf start nodemanager"
-
-# Start ZooKeeper (but managed by HBase)
-# su -s /bin/sh hbase -c "/usr/lib/hbase/bin/hbase-daemon.sh --config /etc/hbase/conf start zookeeper"
-# sleep 25
-
-# Start the HBase master
-# su -s /bin/sh hbase -c "/usr/lib/hbase/bin/hbase-daemon.sh --config /etc/hbase/conf start master"
-
+# Writing a message to a file once startup is over. We will read this file remotely while starting HBase cluster
+# TODO Read this message is not enough. We need to do JPS and check for all processes presence. Now the DN is displayed with out any name in JPS!
 cat >> /etc/hadoop/conf/message<<EOF
 success
 EOF

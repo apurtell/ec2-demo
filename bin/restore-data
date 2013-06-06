@@ -63,8 +63,7 @@ sleep 5
 done
 
 echo "Polling slave processes status"
-rm -f /tmp/ec2-slaves
-ec2-describe-instances $TOOL_OPTS --filter instance-lifecycle=spot --filter image-id=$AMI_IMAGE | grep running | awk '{print $4}'>>/tmp/ec2-slaves
+ec2-describe-instances $TOOL_OPTS --filter instance-lifecycle=spot --filter image-id=$AMI_IMAGE | grep running | awk '{print $4}'>/tmp/ec2-slaves
 cat /tmp/ec2-slaves | while read SLAVE
 do
   echo -n "Slave : $SLAVE"

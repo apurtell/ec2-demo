@@ -5,7 +5,6 @@ secgroup=default
 monitoring=
 zone=
 ami=
-security=
 keypair=root
 
 while [ $# -gt 0 ] ; do
@@ -18,7 +17,6 @@ while [ $# -gt 0 ] ; do
     -k | --keypair)    keypair="$2"; shift;;
     -g | --gc)         gc="$2"; shift;;
     -m | --mem)        mem="$2"; shift;;
-    --security)        security=y ;;
     --)                shift; break;;
     -*)                shift;;
     *)                 break;;
@@ -52,11 +50,7 @@ echo "export GC=$gc">> "$bin"/image/tarball/setup-master-remote.pre
 echo "export MEMORY='$mem'">> "$bin"/image/tarball/setup-master-remote.pre
 echo "/tmp/userdata$$"
 cat "$bin"/image/tarball/setup-master-remote.pre > /tmp/userdata$$
-if [ -z $security ]; then
-  cat "$bin"/image/tarball/setup-remote-nonsecurity >> /tmp/userdata$$
-else
-  cat "$bin"/image/tarball/setup-remote >> /tmp/userdata$$
-fi
+cat "$bin"/image/tarball/setup-remote-nonsecurity >> /tmp/userdata$$
 if [ "$HADOOP_VERSION" = "1.0.4" ]; then
 	cat "$bin"/image/tarball/setup-master-remote.post >> /tmp/userdata$$
 else
