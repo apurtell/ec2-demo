@@ -23,6 +23,8 @@
      Set S3_ACCOUNT to the account that owns S3_BUCKET. Be sure to only use
      digits (elide the '-').
 
+   Create a file bin/jprofile_config.xml with jprofiler configurations
+
 2. Create an AMI (optional)
 
    ./bin/create-image [options]
