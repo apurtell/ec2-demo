@@ -78,9 +78,7 @@ echo
 echo -n "Copying credentials... "
 scp $SSH_OPTS $EC2_PRIVATE_KEY "ec2-user@$HOSTNAME:/tmp/key.pem"
 scp $SSH_OPTS $EC2_CERT "ec2-user@$HOSTNAME:/tmp/cert.pem"
-scp $SSH_OPTS /home/ram/ec2-demo/config_master.xml "ec2-user@$HOSTNAME:/tmp/config_master.xml"
-scp $SSH_OPTS /home/ram/ec2-demo/config_rs.xml "ec2-user@$HOSTNAME:/tmp/config_rs.xml"
-scp $SSH_OPTS /home/ram/ec2-demo/hbase "ec2-user@$HOSTNAME:/tmp/hbase"
+scp $SSH_OPTS "$bin"/jprofile_config.xml "ec2-user@$HOSTNAME:/tmp/jprofile_config.xml"
 
 echo
 

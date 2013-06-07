@@ -1,4 +1,5 @@
 #!/bin/bash
+#script to stop the MR cluster remotely
 ami=
 while [ $# -gt 0 ] ; do
   case "$1" in
@@ -10,13 +11,6 @@ while [ $# -gt 0 ] ; do
   shift
 done
 
-if [ $# -gt 0 ] ; then
-  s3bucket=$1
-  shift
-else
-  echo "usage: restore-data <s3bucket>" && exit 1
-fi
-
 bin=`dirname "$0"`
 bin=`cd "$bin"; pwd`
 export bin
@@ -24,7 +18,6 @@ if [ -f "$bin"/credentials.sh ] ; then
   source "$bin"/credentials.sh
 fi
 source "$bin"/env.sh
-echo "IMAGE_VERSION: $IMAGE_VERSION"
 
 if [ -z $ami ] ; then
   echo "Searching for AMI for $IMAGE_VERSION (may take some time if on a slow network)..."
@@ -37,35 +30,18 @@ fi
 echo "AMI_IMAGE: $AMI_IMAGE"
 [ -z $AMI_IMAGE ] && echo "No AMI found" && exit 1
 
-MASTER=`cat /tmp/ec2-master`
-echo -n "Polling master,$MASTER, process status "
-while true; do
-printf "."
-msg=`ssh -n $SSH_OPTS "ec2-user@$MASTER" "cat /etc/hadoop/conf/message"`
-if [ $msg == success ] ; then
-  echo
-  echo "All processes are up in master"
-  break;
-fi
-sleep 5
-done
-
-echo "Polling slave processes status"
+echo "Stopping NodeManager in all slave nodes"
 ec2-describe-instances $TOOL_OPTS --filter instance-lifecycle=spot --filter image-id=$AMI_IMAGE | grep running | awk '{print $4}'>/tmp/ec2-slaves
+# Stop the NodeManager in the slave nodes
 cat /tmp/ec2-slaves | while read SLAVE
 do
-  echo -n "Slave : $SLAVE"
-  while true; do
-    printf "."
-    msg=`ssh -n $SSH_OPTS "ec2-user@$SLAVE" "cat /etc/hadoop/conf/message"`
-    if [ $msg == success ] ; then
-      echo
-      echo "All processes are up in slave $SLAVE"
-      break
-    fi
-    sleep 5
-  done
+ echo "Stopping NodeManager at Slave : $SLAVE"
+ ssh -n $SSH_OPTS "ec2-user@$SLAVE" "sudo /usr/lib/hadoop/sbin/yarn-daemon.sh --config /etc/hadoop/conf stop nodemanager"
 done
 
-echo "Going to copy data from S3 $s3bucket/hbase"
-ssh  $SSH_OPTS "ec2-user@$MASTER" "sudo /usr/lib/hadoop/bin/hadoop distcp -conf /etc/hadoop/conf/mapred-site.xml s3://$AWS_ACCESS_KEY_ID:$AWS_SECRET_ACCESS_KEY@$s3bucket/hbase \ hdfs://$MASTER:8020/hbase "
+# stop the ResourceManager in the master node
+cat /tmp/ec2-master | while read MASTER
+do
+ echo "Stopping ResourceManager at $MASTER"
+ ssh -n $SSH_OPTS "ec2-user@$MASTER" "sudo /usr/lib/hadoop/sbin/yarn-daemon.sh --config /etc/hadoop/conf stop resourcemanager"
+done

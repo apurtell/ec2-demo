@@ -1,3 +1,5 @@
+#set permission for the /etc/hbase/start-rs
+chmod 770 /etc/hbase/start-rs
 #set permissions to the data dir and nn dir.  This is needed incase read short circuit property
 # is enabled in hbase
 setfacl -R -m u:hbase:rwx /media/ephemeral0/dfs/data

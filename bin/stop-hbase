@@ -1,0 +1,28 @@
+#!/bin/bash
+#script to stop the master and regionserver remotely
+
+bin=`dirname "$0"`
+bin=`cd "$bin"; pwd`
+export bin
+if [ -f "$bin"/credentials.sh ] ; then
+  source "$bin"/credentials.sh
+fi
+source "$bin"/env.sh
+
+echo "Stopping RS in all slave nodes"
+# Stop the regionserver in the slave nodes
+cat /tmp/ec2-slaves | while read SLAVE
+do
+ echo "Stopping HBase RS at Slave : $SLAVE"
+ ssh -n $SSH_OPTS "ec2-user@$SLAVE" "sudo /usr/lib/hbase/bin/hbase-daemon.sh --config /etc/hbase/conf stop regionserver"
+done
+
+# stop the HMaster in the master node
+cat /tmp/ec2-master | while read MASTER
+do
+ echo "Stopping HBase Master at $MASTER"
+ ssh -n $SSH_OPTS "ec2-user@$MASTER" "sudo /usr/lib/hbase/bin/hbase-daemon.sh --config /etc/hbase/conf stop master"
+ # Stop ZooKeeper (managed by HBase)
+ ssh -n $SSH_OPTS "ec2-user@$MASTER" "sudo /usr/lib/hbase/bin/hbase-daemon.sh --config /etc/hbase/conf stop zookeeper"
+
+done

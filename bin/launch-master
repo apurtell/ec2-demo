@@ -15,8 +15,6 @@ while [ $# -gt 0 ] ; do
     -z | --zone)       zone="$2"; shift;;
     --ami)             ami="$2"; shift;;
     -k | --keypair)    keypair="$2"; shift;;
-    -g | --gc)         gc="$2"; shift;;
-    -m | --mem)        mem="$2"; shift;;
     --)                shift; break;;
     -*)                shift;;
     *)                 break;;
@@ -46,8 +44,6 @@ fi
 echo "AMI_IMAGE: $AMI_IMAGE"
 
 [ -z $AMI_IMAGE ] && echo "No AMI found" && exit 1
-echo "export GC=$gc">> "$bin"/image/tarball/setup-master-remote.pre
-echo "export MEMORY='$mem'">> "$bin"/image/tarball/setup-master-remote.pre
 echo "/tmp/userdata$$"
 cat "$bin"/image/tarball/setup-master-remote.pre > /tmp/userdata$$
 cat "$bin"/image/tarball/setup-remote-nonsecurity >> /tmp/userdata$$
