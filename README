@@ -70,7 +70,41 @@
    More slaves can be launched at any time by executing bin/launch-slaves
    again.
 
-5. SSH to the cluster
+5. Backup HBase data
+
+   The HBase data can be backed up to S3. We copy data to S3 using distcp command of Hadoop
+
+   ./bin/backup-data <s3bucket> 
+
+   where <s3bucket> is the S3 bucket to which the data will get backed up.
+
+6. Restore HBase data
+   
+   The HBase data can be backed up to S3. Later for restoring this data we can use this script. This to be called after the launch of master and slaves are over.
+   This launches will start HDFS and MR clusters. We copy data from S3 using distcp command of Hadoop
+
+   ./bin/restore-data [options] <s3bucket> 
+
+   where [options] can be one or more of:
+
+      --ami <id>   AMI ID
+   
+   where <s3bucket> is the S3 bucket where the data is backed up
+
+7. Launch hbase
+
+   Using this the HBase cluster can be launched. 
+
+   ./bin/launch-hbase [options]
+   
+   where [options] can be one or more of:
+
+     --ami <id>   AMI ID
+     --gc <gc type>  Possible values are CMS/G1GC and defaults to CMS
+     --mem <memory setting>  Memory setting to be used by the RS. Can pass -Xmx48g -Xmn16g etc.
+     -p / --profile Whether to profile the RS. We use JProfiler for profiling.
+
+8. SSH to the cluster
 
    Typically you will want to log in to the master:
 

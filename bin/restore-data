@@ -24,7 +24,6 @@ if [ -f "$bin"/credentials.sh ] ; then
   source "$bin"/credentials.sh
 fi
 source "$bin"/env.sh
-echo "IMAGE_VERSION: $IMAGE_VERSION"
 
 if [ -z $ami ] ; then
   echo "Searching for AMI for $IMAGE_VERSION (may take some time if on a slow network)..."
@@ -38,6 +37,7 @@ echo "AMI_IMAGE: $AMI_IMAGE"
 [ -z $AMI_IMAGE ] && echo "No AMI found" && exit 1
 
 MASTER=`cat /tmp/ec2-master`
+[ -z $MASTER ] && echo "Hostname for Master can not be found" && exit 1
 echo -n "Polling master,$MASTER, process status "
 while true; do
 printf "."
@@ -67,5 +67,5 @@ do
   done
 done
 
-echo "Going to copy data from S3 $s3bucket/hbase"
+echo "Going to copy HBase data from S3 $s3bucket/hbase"
 ssh  $SSH_OPTS "ec2-user@$MASTER" "sudo /usr/lib/hadoop/bin/hadoop distcp -conf /etc/hadoop/conf/mapred-site.xml s3://$AWS_ACCESS_KEY_ID:$AWS_SECRET_ACCESS_KEY@$s3bucket/hbase \ hdfs://$MASTER:8020/hbase "

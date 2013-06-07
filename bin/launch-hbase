@@ -7,8 +7,8 @@ mem='-Xmx32g -Xmn16g'
 while [ $# -gt 0 ] ; do
   case "$1" in
     --ami)             ami="$2"; shift;;
-    -g | --gc)         gc="$2"; shift;;
-    -m | --mem)        mem="$2"; shift;;
+    --gc)              gc="$2"; shift;;
+    --mem)             mem="$2"; shift;;
     -p | --profile)    profile=y ;;
     --)                shift; break;;
     -*)                shift;;

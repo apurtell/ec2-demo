@@ -1,0 +1,22 @@
+#!/bin/bash
+
+if [ $# -gt 0 ] ; then
+  s3bucket=$1
+  shift
+else
+  echo "usage: backup-data <s3bucket>" && exit 1
+fi
+
+bin=`dirname "$0"`
+bin=`cd "$bin"; pwd`
+export bin
+if [ -f "$bin"/credentials.sh ] ; then
+  source "$bin"/credentials.sh
+fi
+source "$bin"/env.sh
+
+MASTER=`cat /tmp/ec2-master`
+[ -z $MASTER ] && echo "Hostname for Master can not be found" && exit 1
+
+echo "Going to copy HBase data to S3 $s3bucket/hbase"
+ssh  $SSH_OPTS "ec2-user@$MASTER" "sudo /usr/lib/hadoop/bin/hadoop distcp -conf /etc/hadoop/conf/mapred-site.xml hdfs://$MASTER:8020/hbase \ s3://$AWS_ACCESS_KEY_ID:$AWS_SECRET_ACCESS_KEY@$s3bucket/hbase"
