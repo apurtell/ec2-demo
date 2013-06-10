@@ -51,3 +51,7 @@ EPEL_RPM=http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-5.noarch.r
 
 JAVA_VERSION=${JAVA_VERSION:-7u17}
 JAVA_RPM=https://s3.amazonaws.com/intel-hadoop-apurtell-us-east-1/jdk/jdk-$JAVA_VERSION-linux-x64_64.rpm
+
+GC_LOG_OPT="-verbose:gc -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:/var/log/hbase/hbase-regionserver-gc.log"
+HBASE_RS_MEM_GC_OPT="-Xmx16g -Xmn4g -XX:+UseConcMarkSweepGC -XX:+CMSParallelRemarkEnabled -XX:+UseParNewGC $GC_LOG_OPT"
+#HBASE_RS_MEM_GC_OPT="-Xmx48g -Xmn20g -XX:+UseG1GC -XX:+G1ParallelRSetUpdatingEnabled -XX:+G1ParallelRSetScanningEnabled -XX:NewRatio=1 $GC_LOG_OPT"

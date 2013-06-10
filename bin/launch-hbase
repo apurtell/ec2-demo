@@ -2,13 +2,9 @@
 #script to start the master and regionserver remotely
 ami=
 profile=n
-gc=CMS
-mem='-Xmx32g -Xmn16g'
 while [ $# -gt 0 ] ; do
   case "$1" in
     --ami)             ami="$2"; shift;;
-    --gc)              gc="$2"; shift;;
-    --mem)             mem="$2"; shift;;
     -p | --profile)    profile=y ;;
     --)                shift; break;;
     -*)                shift;;
@@ -47,12 +43,12 @@ do
 done
 
 echo "Starting RS in all slave nodes"
-echo "GC algorithm: $gc with memory setting : $mem"
+echo "GC and memory setting : $HBASE_RS_MEM_GC_OPT"
 
 # start the regionserver in the slave nodes
 ec2-describe-instances $TOOL_OPTS --filter instance-lifecycle=spot --filter image-id=$AMI_IMAGE | grep running | awk '{print $4}'>/tmp/ec2-slaves
 cat /tmp/ec2-slaves | while read SLAVE
 do
  echo "Starting HBase RS at Slave : $SLAVE"
- ssh -n $SSH_OPTS "ec2-user@$SLAVE" "sudo /etc/hbase/start-rs $gc '$mem' $profile"
+ ssh -n $SSH_OPTS "ec2-user@$SLAVE" "sudo /etc/hbase/start-rs '$HBASE_RS_MEM_GC_OPT' $profile"
 done

@@ -95,15 +95,13 @@
 
 7. Launch hbase
 
-   Using this the HBase cluster can be launched. 
+   Using this the HBase cluster can be launched. Add the memory setting and GC options to be used by the RSs in bin/env.sh (See HBASE_RS_MEM_GC_OPT in env.sh)
 
    ./bin/launch-hbase [options]
    
    where [options] can be one or more of:
 
      --ami <id>   AMI ID
-     --gc <gc type>  Possible values are CMS/G1GC and defaults to CMS
-     --mem <memory setting>  Memory setting to be used by the RS. Can pass -Xmx48g -Xmn16g etc.
      -p / --profile Whether to profile the RS. We use JProfiler for profiling.
 
 8. SSH to the cluster

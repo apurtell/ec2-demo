@@ -709,18 +709,11 @@ sed -i "s/localhost/$HOSTNAME/g" /usr/lib/jprofiler_data/config.xml
 # Create file which can start HBase RS with passed GC and mem args and with/without profiling
 if [ "$IS_MASTER" = "false" ]; then
 #This script to be called by root user
-#1st argument to be passed to this script - What GC algo to be used. Possible values are CMS/G1GC
-#2nd argument to be passed is the memory setting string like -Xmx32g -Xmn16g
-#3rd argument to be passed is whether to profile this RS or not. Pass 'y' for profile and 'n' for not.
+#1st argument to be passed to this script - GC option and memory settings to be used while starting RS.
+#2nd argument to be passed is whether to profile this RS or not. Pass 'y' for profile and 'n' for not.
 cat > /etc/hbase/start-rs <<EOF
-GC_LOG="-verbose:gc -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:/var/log/hbase/hbase-regionserver-gc.log"
-if [ "$1" = "CMS" ]; then
- export HBASE_REGIONSERVER_OPTS="$HBASE_REGIONSERVER_OPTS $2 -XX:+UseConcMarkSweepGC -XX:+CMSParallelRemarkEnabled -XX:+UseParNewGC $GC_LOG"
-fi
-if [ "$1" = "G1GC" ]; then
- export HBASE_REGIONSERVER_OPTS="$HBASE_REGIONSERVER_OPTS $2 -XX:+UseG1GC -XX:+G1ParallelRSetUpdatingEnabled -XX:+G1ParallelRSetScanningEnabled -XX:NewRatio=1 $GC_LOG"
-fi
-if [ "$3" = "y" ]; then
+export HBASE_REGIONSERVER_OPTS="$HBASE_REGIONSERVER_OPTS $1"
+if [ "$2" = "y" ]; then
  export HBASE_OPTS="$HBASE_OPTS -agentpath:/usr/lib/jprofiler7/bin/linux-x64/libjprofilerti.so=offline,id=116,config=/usr/lib/jprofiler_data/config.xml"
 fi
 /usr/lib/hbase/bin/hbase-daemon.sh --config /etc/hbase/conf start regionserver
