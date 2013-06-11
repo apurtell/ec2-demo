@@ -580,7 +580,7 @@ cat >> /etc/hbase/conf/hbase-env.sh <<EOF
 export JAVA_HOME=/usr/java/latest
 export HBASE_MASTER_OPTS="\$HBASE_MASTER_OPTS -Xmn64m -Xms2g -Xmx2g -XX:+UseConcMarkSweepGC -XX:+CMSParallelRemarkEnabled -XX:+UseParNewGC -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:/var/log/hbase/hbase-master-gc.log"
 
-export HBASE_REGIONSERVER_OPTS="\$HBASE_REGIONSERVER_OPTS -Xmn64m -Xms4g -Xmx16g -XX:+UseConcMarkSweepGC -XX:+CMSParallelRemarkEnabled -XX:+UseParNewGC -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:/var/log/hbase/hbase-regionserver-gc.log"
+export HBASE_REGIONSERVER_OPTS="\$HBASE_REGIONSERVER_OPTS"
 export HBASE_ZOOKEEPER_OPTS="\$HBASE_ZOOKEEPER_OPTS -Xmn64m -Xms2g -Xmx2g -XX:+UseConcMarkSweepGC -XX:+CMSParallelRemarkEnabled -XX:+UseParNewGC"
 EOF
 
