@@ -82,14 +82,10 @@ wget http://download-aws.ej-technologies.com/jprofiler/jprofiler_linux_7_2_2.tar
 
 tar -xvf jprofiler_linux_7_2_2.tar.gz
 mkdir -p /usr/lib/jprofiler_data
+mkdir /usr/lib/jprofiler_data/rs
 cp /media/ephemeral0/jprofile_config.xml /usr/lib/jprofiler_data/config.xml
 
 
-############################
-#Install ycsb
-
-wget $YCSB_URL
-tar -xvf ycsb-0.1.4.tar.gz
 
 ####################
 # Install Hadoop
@@ -277,6 +273,23 @@ cat >> /root/.bashrc <<EOF
 export PATH=\$PATH:/usr/lib/hadoop/bin:/usr/lib/hbase/bin
 EOF
 fi
+
+
+############################
+#Install ycsb
+#This also replaces the slf jars and the zookeeper jars from the current running version of hbase
+#This will get installed in all the machines in the setup. It is upto us to start it from any of the machines.
+cd /usr/lib
+wget $YCSB_URL
+tar -xvf ycsb-0.1.4.tar.gz
+
+cd ycsb-0.1.4/
+cd hbase-binding/
+
+cp /usr/lib/hbase/lib/slf4j-* lib/
+cp /usr/lib/hbase/lib/zookeeper*.jar lib/
+#This is not there so the copy does not work
+#cp /etc/hbase/conf/hbase-site.xml conf/
 
 ####################
 # Configure system

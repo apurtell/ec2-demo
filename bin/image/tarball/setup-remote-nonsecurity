@@ -705,6 +705,10 @@ EOF
 ##configure hostname in jprofiler config file
 sed -i "s/localhost/$HOSTNAME/g" /usr/lib/jprofiler_data/config.xml
 
+#copy the hbase-site to the ycsb folder
+cd /usr/lib/ycsb-0.1.4/hbase-binding/
+cp /etc/hbase/conf/hbase-site.xml conf/
+
 ##################################################################################################################
 # Create file which can start HBase RS with passed GC and mem args and with/without profiling
 if [ "$IS_MASTER" = "false" ]; then
