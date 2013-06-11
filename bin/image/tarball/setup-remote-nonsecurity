@@ -712,8 +712,8 @@ if [ "$IS_MASTER" = "false" ]; then
 #1st argument to be passed to this script - GC option and memory settings to be used while starting RS.
 #2nd argument to be passed is whether to profile this RS or not. Pass 'y' for profile and 'n' for not.
 cat > /etc/hbase/start-rs <<EOF
-export HBASE_REGIONSERVER_OPTS="$HBASE_REGIONSERVER_OPTS $1"
-if [ "$2" = "y" ]; then
+export HBASE_REGIONSERVER_OPTS="\$HBASE_REGIONSERVER_OPTS \$1"
+if [ \$2 = "y" ]; then
  export HBASE_OPTS="$HBASE_OPTS -agentpath:/usr/lib/jprofiler7/bin/linux-x64/libjprofilerti.so=offline,id=116,config=/usr/lib/jprofiler_data/config.xml"
 fi
 /usr/lib/hbase/bin/hbase-daemon.sh --config /etc/hbase/conf start regionserver

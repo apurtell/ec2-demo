@@ -17,15 +17,17 @@ S3_ACCOUNT=${S3_ACCOUNT:-$AWS_ACCOUNT_ID}
 #export HBASE_VERSION=0.94.5
 #export HBASE_URL=http://www.apache.org/dist/hbase/hbase-$HBASE_VERSION/hbase-$HBASE_VERSION-security.tar.gz
 
-export HBASE_VERSION=0.97-SNAPSHOT
+export HBASE_VERSION=0.97.0-SNAPSHOT
 #export HBASE_URL=http://www.apache.org/dist/hbase/hbase-$HBASE_VERSION/hbase-$HBASE_VERSION-security.tar.gz
-export HBASE_URL=https://s3.amazonaws.com/Ram_bucket_us-east-1/hbase-0.97-SNAPSHOT.tar.gz
+#export HBASE_URL=https://s3.amazonaws.com/Ram_bucket_us-east-1/hbase-0.97-SNAPSHOT.tar.gz
+export HBASE_URL=https://s3.amazonaws.com/Ram_bucket_us-east-1/hbase-0.97.0-SNAPSHOT-bin.tar.gz
+export YCSB_URL=https://s3.amazonaws.com/Ram_bucket_us-east-1/ycsb-0.1.4.tar.gz
 
 
 # The version of Hadoop to use and the distribution tarball location
 
 #export HADOOP_VERSION=1.0.4
-export HADOOP_VERSION=2.0.3-alpha
+export HADOOP_VERSION=2.0.4-alpha
 export HADOOP_URL=http://www.apache.org/dist/hadoop/common/hadoop-$HADOOP_VERSION/hadoop-$HADOOP_VERSION.tar.gz
 #export HADOOP_URL=http://www.apache.org/dist/hadoop/common/hadoop-$HADOOP_VERSION/hadoop-$HADOOP_VERSION-bin.tar.gz
 
@@ -52,6 +54,7 @@ EPEL_RPM=http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-5.noarch.r
 JAVA_VERSION=${JAVA_VERSION:-7u17}
 JAVA_RPM=https://s3.amazonaws.com/intel-hadoop-apurtell-us-east-1/jdk/jdk-$JAVA_VERSION-linux-x64_64.rpm
 
+
 GC_LOG_OPT="-verbose:gc -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:/var/log/hbase/hbase-regionserver-gc.log"
-HBASE_RS_MEM_GC_OPT="-Xmx16g -Xmn4g -XX:+UseConcMarkSweepGC -XX:+CMSParallelRemarkEnabled -XX:+UseParNewGC $GC_LOG_OPT"
+HBASE_RS_MEM_GC_OPT="-Xmx48g -Xmn4g -XX:+UseConcMarkSweepGC -XX:+CMSParallelRemarkEnabled -XX:+UseParNewGC $GC_LOG_OPT"
 #HBASE_RS_MEM_GC_OPT="-Xmx48g -Xmn20g -XX:+UseG1GC -XX:+G1ParallelRSetUpdatingEnabled -XX:+G1ParallelRSetScanningEnabled -XX:NewRatio=1 $GC_LOG_OPT"

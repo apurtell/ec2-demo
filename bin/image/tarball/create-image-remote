@@ -84,6 +84,13 @@ tar -xvf jprofiler_linux_7_2_2.tar.gz
 mkdir -p /usr/lib/jprofiler_data
 cp /media/ephemeral0/jprofile_config.xml /usr/lib/jprofiler_data/config.xml
 
+
+############################
+#Install ycsb
+
+wget $YCSB_URL
+tar -xvf ycsb-0.1.4.tar.gz
+
 ####################
 # Install Hadoop
 echo "Checking for hadoop version"
@@ -213,7 +220,7 @@ fi
 
 ####################
 
-if [ "$HBASE_VERSION" = "0.97-SNAPSHOT" ]; then
+if [ "$HBASE_VERSION" = "0.97.0-SNAPSHOT" ]; then
 # Install HBase
 
 echo "Installing HBase $HBASE_VERSION."
