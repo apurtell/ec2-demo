@@ -1,0 +1,13 @@
+<property>
+    <name>hfile.block.cache.size</name>
+    <value>0.75</value>		
+</property>
+<property>
+    <name>hbase.regionserver.global.memstore.upperLimit</name>
+    <value>0.02</value>
+</property>
+<property>
+    <name>hbase.regionserver.global.memstore.lowerLimit</name>
+    <value>0.01</value>
+</property>
+</configuration>

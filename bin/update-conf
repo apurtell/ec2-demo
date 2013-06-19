@@ -1,0 +1,20 @@
+cript to stop the master and regionserver remotely
+
+bin=`dirname "$0"`
+bin=`cd "$bin"; pwd`
+export bin
+if [ -f "$bin"/credentials.sh ] ; then
+  source "$bin"/credentials.sh
+fi
+source "$bin"/env.sh
+
+echo "Updating RS conf in all slave nodes"
+# Stop the regionserver in the slave nodes
+cat /tmp/ec2-slaves | while read SLAVE
+do
+ echo "Updating conf HBase RS at Slave : $SLAVE"
+ ssh -n $SSH_OPTS "ec2-user@$SLAVE" 'sudo chmod 777 /usr/lib/hbase/conf/hbase-site.xml'
+ ssh -n $SSH_OPTS "ec2-user@$SLAVE" 'sudo sed -i "s/<\/configuration>/<!--\/configuration>-->/g" /usr/lib/hbase/conf/hbase-site.xml'
+ cat input.txt| ssh -i $SSH_OPTS  ec2-user@$SLAVE 'sudo cat >> /usr/lib/hbase/conf/hbase-site.xml'
+done
+
