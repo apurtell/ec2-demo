@@ -1,4 +1,4 @@
-cript to stop the master and regionserver remotely
+#script to update the configuration remotely.  Ensure that there is a file input.txt in the current bin path and specify the config that needs to be modified in that file
 
 bin=`dirname "$0"`
 bin=`cd "$bin"; pwd`
