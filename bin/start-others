@@ -1,0 +1,43 @@
+#!/bin/bash
+#script to start the nn, dn, resourncemanager and nodemanger remotely
+
+bin=`dirname "$0"`
+bin=`cd "$bin"; pwd`
+export bin
+if [ -f "$bin"/credentials.sh ] ; then
+  source "$bin"/credentials.sh
+fi
+source "$bin"/env.sh
+
+
+
+# stop the HMaster in the master node
+cat /tmp/ec2-master | while read MASTER
+do
+ echo "formatting namenode at master : $MASTER"
+ ssh -n $SSH_OPTS "ec2-user@$MASTER" "sudo /usr/lib/hadoop/bin/hdfs namenode -format -force"
+
+ echo "starting namenode at master : $MASTER"
+ ssh -n $SSH_OPTS "ec2-user@$MASTER" "sudo /usr/lib/hadoop/sbin/hadoop-daemon.sh --config /etc/hadoop/conf start namenode"
+
+ echo "starting resourcemanager at master : $MASTER"
+ ssh -n $SSH_OPTS "ec2-user@$MASTER" "sudo /usr/lib/hadoop/sbin/yarn-daemon.sh --config /etc/hadoop/conf start resourcemanager"
+done
+sleep 10
+echo "starting RS in all slave nodes"
+# Stop the regionserver in the slave nodes
+cat /tmp/ec2-slaves | while read SLAVE
+do
+ echo "Deleting data on the slave machine : $SLAVE"
+ 
+ ssh -n $SSH_OPTS "ec2-user@$SLAVE" "sudo  rm -rf /media/ephemeral0/dfs/data/"
+
+ ssh -n $SSH_OPTS "ec2-user@$SLAVE" "sudo  rm -rf /media/ephemeral1/dfs/data/"
+
+ echo "starting DN at slave : $SLAVE"
+ ssh -n $SSH_OPTS "ec2-user@$SLAVE" "sudo /usr/lib/hadoop/sbin/hadoop-daemon.sh --config /etc/hadoop/conf start datanode"
+
+ echo "starting NM at slave : $SLAVE"
+  ssh -n $SSH_OPTS "ec2-user@$SLAVE" "sudo /usr/lib/hadoop/sbin/yarn-daemon.sh --config /etc/hadoop/conf start nodemanager"
+done
+

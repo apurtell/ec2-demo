@@ -1,0 +1,32 @@
+#!/bin/bash
+#script to stop the master and regionserver remotely
+
+bin=`dirname "$0"`
+bin=`cd "$bin"; pwd`
+export bin
+if [ -f "$bin"/credentials.sh ] ; then
+  source "$bin"/credentials.sh
+fi
+source "$bin"/env.sh
+
+echo "Stopping RS in all slave nodes"
+# Stop the regionserver in the slave nodes
+cat /tmp/ec2-slaves | while read SLAVE
+do
+ echo "Stopping DN at slave : $SLAVE"
+ ssh -n $SSH_OPTS "ec2-user@$SLAVE" "sudo /usr/lib/hadoop/sbin/hadoop-daemon.sh --config /etc/hadoop/conf stop datanode"
+
+ echo "Stopping NM at slave : $SLAVE"
+  ssh -n $SSH_OPTS "ec2-user@$SLAVE" "sudo /usr/lib/hadoop/sbin/yarn-daemon.sh --config /etc/hadoop/conf stop nodemanager"
+done
+
+# stop the HMaster in the master node
+cat /tmp/ec2-master | while read MASTER
+do
+ echo "Stopping namenode at master : $MASTER"
+ ssh -n $SSH_OPTS "ec2-user@$MASTER" "sudo /usr/lib/hadoop/sbin/hadoop-daemon.sh --config /etc/hadoop/conf stop namenode"
+
+ echo "Stopping resourcemanager at master : $MASTER"
+ ssh -n $SSH_OPTS "ec2-user@$MASTER" "sudo /usr/lib/hadoop/sbin/yarn-daemon.sh --config /etc/hadoop/conf stop resourcemanager"
+
+done

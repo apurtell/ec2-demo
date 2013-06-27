@@ -1,0 +1,41 @@
+#!/bin/bash
+#script to replace hbase tar files
+bin=`dirname "$0"`
+bin=`cd "$bin"; pwd`
+export bin
+if [ -f "$bin"/credentials.sh ] ; then
+  source "$bin"/credentials.sh
+fi
+source "$bin"/env.sh
+
+echo "REplacing hbase jar in all slave nodes"
+# Take bkpup of  the regionserver in the slave nodes
+cat /tmp/ec2-slaves | while read SLAVE
+do
+ echo "taking bkp of  HBase RS at Slave : $SLAVE"
+ 
+ #echo "Creating the lib_bkp file"
+ #ssh -n $SSH_OPTS "ec2-user@$SLAVE" "sudo mkdir /usr/lib/hbase/lib_bkp"
+ 
+ #echo "setting the permissions for lib_bkp file"
+ #ssh -n $SSH_OPTS "ec2-user@$SLAVE" "sudo chmod 777 /usr/lib/hbase/lib_bkp"
+
+ #echo "deleting existing hbase"
+ ssh -n $SSH_OPTS "ec2-user@$SLAVE" "sudo rm -rf /home/ec2-user/hbase-0.97.0-SNAPSHOT"
+
+ #echo "copying the tar.gz to /tmp"
+ scp -q -i $SSH_OPTS /home/ram/hbase-0.97.0-SNAPSHOT-bin_kvcodec.tar.gz "ec2-user@$SLAVE:/tmp"
+  
+ echo "untaring the tar.gz"
+ ssh -n $SSH_OPTS "ec2-user@$SLAVE" "sudo tar -xvf /tmp/hbase-0.97.0-SNAPSHOT-bin_kvcodec.tar.gz"
+ 
+ #echo "moving the current lib to lib_bkp"
+ #ssh -n $SSH_OPTS "ec2-user@$SLAVE" "sudo mv /usr/lib/hbase/lib /usr/lib/hbase/lib_bkp"
+
+ #echo "delete exisiting lib folder"
+ ssh -n $SSH_OPTS "ec2-user@$SLAVE" "sudo rm -rf /usr/lib/hbase/lib/"
+
+ #echo "copy the lib from the tar.gz to the acutal location"
+ ssh -n $SSH_OPTS "ec2-user@$SLAVE" "sudo cp -r /home/ec2-user/hbase-0.97.0-SNAPSHOT/lib /usr/lib/hbase"
+
+done
